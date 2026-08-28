@@ -1,0 +1,33 @@
+{
+  "name": "every-photobooth-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configurable capture, AI transform, print, and takeaway service for the Every photobooth.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch index.js --watch app.js --watch config.js --watch utils --ext js,json index.js",
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fal-ai/client": "^1.6.2",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "multer": "^2.0.2",
+    "node-addon-api": "^8.5.0",
+    "node-fetch": "^3.3.2",
+    "sharp": "0.35.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  }
+}
