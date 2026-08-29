@@ -135,6 +135,9 @@ export function createApp(overrides = {}) {
               photoId,
               prompt: transitionPrompt,
               editor,
+              mode,
+              originalPath: request.file.path,
+              groupUrl: mode === "every.one.in" ? variantAUrl : null,
             });
           } catch (error) {
             console.error("Animation pipeline failed:", error.message);
