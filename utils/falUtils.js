@@ -23,7 +23,7 @@ export function createFalEditor({ credentials, model }) {
     const result = await fal.subscribe(model, {
       input: {
         prompt,
-        image_urls: [imageUrl],
+        image_urls: Array.isArray(imageUrl) ? imageUrl : [imageUrl],
         num_images: 1,
         output_format: "jpeg",
       },
@@ -34,17 +34,21 @@ export function createFalEditor({ credentials, model }) {
     return outputUrl;
   };
 
+  const createVariantsFromSourceUrls = async (sourceUrls, variantAPrompt, variantBPrompt) => {
+    const [variantAUrl, variantBUrl] = await Promise.all([
+      edit(sourceUrls, variantAPrompt),
+      edit(sourceUrls, variantBPrompt),
+    ]);
+    return { sourceUrl: sourceUrls[0], variantAUrl, variantBUrl };
+  };
+
   return {
     upload,
-    async createVariants(buffer, filename, variantAPrompt, variantBPrompt) {
+    async createVariants(buffer, filename, variantAPrompt, variantBPrompt, additionalImageUrls = []) {
       const sourceUrl = await upload(buffer, filename);
-
-      const [variantAUrl, variantBUrl] = await Promise.all([
-        edit(sourceUrl, variantAPrompt),
-        edit(sourceUrl, variantBPrompt),
-      ]);
-      return { sourceUrl, variantAUrl, variantBUrl };
+      return createVariantsFromSourceUrls([sourceUrl, ...additionalImageUrls.filter(Boolean)], variantAPrompt, variantBPrompt);
     },
+    createVariantsFromSourceUrls,
     edit,
   };
 }

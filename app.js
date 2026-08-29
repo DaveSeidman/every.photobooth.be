@@ -7,6 +7,20 @@ import { ensureDirectories, createUploadMiddleware } from "./utils/fileUtils.js"
 import { createFalEditor } from "./utils/falUtils.js";
 import { composeStrip, resizeForModel } from "./utils/imageUtils.js";
 import { createTransitionAnimation } from "./utils/animationUtils.js";
+import { modePrompts, normalizeMode, publicModes, sanitizeOracleContext, designerPromptOptions } from "./modes.js";
+import { getSession, resetSession, sessionSummary, updateSession } from "./sessions.js";
+
+const parseJsonObject = (value) => {
+  if (!value) return {};
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value !== "string") return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
 
 export function createApp(overrides = {}) {
   const runtimeConfig = overrides.config || config;
@@ -30,12 +44,17 @@ export function createApp(overrides = {}) {
     aiConfigured: Boolean(runtimeConfig.falKey),
   }));
   app.get("/config", (_request, response) => response.json(publicConfig(runtimeConfig)));
+  app.get("/modes", (_request, response) => response.json({ modes: publicModes() }));
+  app.get("/sessions/:sessionId", (request, response) => response.json(sessionSummary(request.params.sessionId)));
   app.get("/prompts", (_request, response) => response.json({
     past: runtimeConfig.prompts.variantA,
     future: runtimeConfig.prompts.variantB,
     remove: runtimeConfig.prompts.transition,
     ...runtimeConfig.prompts,
   }));
+  app.post("/sessions/reset", (request, response) => {
+    response.json({ success: true, session: resetSession(request.body?.sessionId) });
+  });
 
   app.post("/submit", upload.single("photo"), async (request, response, next) => {
     try {
@@ -49,15 +68,27 @@ export function createApp(overrides = {}) {
       }
 
       const photoId = `${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
-      const variantAPrompt = request.body.variantAPrompt || request.body.pastPrompt || runtimeConfig.prompts.variantA;
-      const variantBPrompt = request.body.variantBPrompt || request.body.futurePrompt || runtimeConfig.prompts.variantB;
-      const transitionPrompt = request.body.transitionPrompt || request.body.removePrompt || runtimeConfig.prompts.transition;
+      const mode = normalizeMode(request.body.mode);
+      const session = getSession(request.body.sessionId);
+      const oracleContext = sanitizeOracleContext(parseJsonObject(request.body.oracleContext));
+      const designerOptions = designerPromptOptions(parseJsonObject(request.body.designerOptions));
+      const modeDefaults = modePrompts({
+        mode,
+        basePrompts: runtimeConfig.prompts,
+        oracleContext,
+        designerOptions,
+        hasMemory: mode === "every.one.in" && Boolean(session.masterUrl),
+      });
+      const variantAPrompt = request.body.variantAPrompt || request.body.pastPrompt || modeDefaults.variantA;
+      const variantBPrompt = request.body.variantBPrompt || request.body.futurePrompt || modeDefaults.variantB;
+      const transitionPrompt = request.body.transitionPrompt || request.body.removePrompt || modeDefaults.transition;
       const modelBuffer = await resizeForModel(request.file.path);
       const { variantAUrl, variantBUrl } = await editor.createVariants(
         modelBuffer,
         request.file.filename,
         variantAPrompt,
         variantBPrompt,
+        mode === "every.one.in" && session.masterUrl ? [session.masterUrl] : [],
       );
       const stripPath = await composeStrip({
         originalPath: request.file.path,
@@ -81,8 +112,19 @@ export function createApp(overrides = {}) {
           photo: `/photos/${photoId}.jpg`,
           animation: runtimeConfig.animationEnabled ? `/photos/${photoId}.gif` : null,
           printStatus: "coming-soon",
+          mode,
+          groupCount: mode === "every.one.in" ? session.count + 1 : undefined,
+          oracle: mode === "every.oracle" ? { enabled: true, message: "A little context, carefully used." } : undefined,
         },
       });
+
+      if (mode === "every.one.in") {
+        updateSession(session.id, {
+          masterUrl: variantAUrl,
+          count: session.count + 1,
+          oracleContext: {},
+        });
+      }
 
       void (async () => {
         if (runtimeConfig.animationEnabled) {

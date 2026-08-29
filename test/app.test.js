@@ -57,3 +57,16 @@ test("submit requires a photo", async () => {
   const response = await request(app).post("/submit").expect(400);
   assert.equal(response.body.success, false);
 });
+
+test("creative modes and session reset are available", async () => {
+  const modes = await request(app).get("/modes").expect(200);
+  assert.deepEqual(modes.body.modes.map((mode) => mode.id), [
+    "thesis.editorial",
+    "every.one.in",
+    "every.oracle",
+    "every.designer",
+    "branded.posthog",
+  ]);
+  const reset = await request(app).post("/sessions/reset").send({ sessionId: "demo-room" }).expect(200);
+  assert.equal(reset.body.session.count, 0);
+});

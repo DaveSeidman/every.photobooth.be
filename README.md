@@ -38,3 +38,11 @@ Add a `FAL_KEY` before submitting a real photo. The health endpoint remains avai
 - Set prompt and label variables in `.env` for a different event or colorway.
 - Adjust strip dimensions and panel placement with the `STRIP_*` and `PHOTO_*` variables.
 - Printing is intentionally disabled; the frontend shows “Print edition coming soon.” The existing print utility is kept isolated for a later printer integration.
+
+## Creative modes
+
+`GET /modes` exposes the available experience modes. `POST /submit` accepts `mode` and `sessionId`; Oracle requests may include a JSON `oracleContext` with only short, consented fields (`firstName`, `city`, `industry`, `role`, `company`). No LinkedIn lookup is performed by this service. Designer requests may include `designerOptions` (`palette`, `brushX`, `brushY`, `texture`).
+
+`every.one.in` keeps the cumulative master image in process memory and feeds it back into the next generation. A process restart clears the room; production should move this state to an expiring database/object store. `POST /sessions/reset` clears a session explicitly.
+
+The PostHog mode is sponsor-inspired (sage desktop surface, event/funnel/retention motifs, orange accents) and does not copy logos or readable product UI.
