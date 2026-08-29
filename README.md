@@ -1,6 +1,6 @@
 # Every Photobooth Backend
 
-Express service for a configurable AI photobooth. It preserves the proven Halloween data flow while removing theme-specific copy, assets, prompts, URLs, and print-server assumptions.
+Express service for the Every / Thesis: 2027 AI photobooth. It preserves the proven Halloween data flow while replacing its theme-specific copy, assets, prompts, URLs, and print-server assumptions.
 
 ## Flow
 
@@ -34,7 +34,8 @@ Add a `FAL_KEY` before submitting a real photo. The health endpoint remains avai
 
 ## Theming hooks
 
+- The default prompts create Thesis-inspired screenprinted speaker portraits: monochrome cutouts on electric blue or coral fields with rough swashes, halftone dots, paper grain, and imperfect registration.
 - Replace `assets/strip-background.svg` or point `STRIP_BACKGROUND` at a different asset.
-- Set prompt and label variables in `.env`.
+- Set prompt and label variables in `.env` for a different event or colorway.
 - Adjust strip dimensions and panel placement with the `STRIP_*` and `PHOTO_*` variables.
 - Set `PRINT_SERVER_URL` to the new event print relay. Printing is safe-by-default and disabled when it is blank.

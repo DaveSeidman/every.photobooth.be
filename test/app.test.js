@@ -36,8 +36,10 @@ test("health endpoint reports service readiness", async () => {
 
 test("public config exposes labels and prompts without secrets", async () => {
   const response = await request(app).get("/config").expect(200);
-  assert.equal(typeof response.body.labels.variantA, "string");
-  assert.equal(typeof response.body.prompts.variantB, "string");
+  assert.equal(response.body.labels.variantA, "Thesis Blue");
+  assert.equal(response.body.labels.variantB, "Thesis Coral");
+  assert.match(response.body.prompts.variantA, /screenprint/i);
+  assert.match(response.body.prompts.variantB, /#FF7B70/);
   assert.equal(response.body.falKey, undefined);
 });
 
