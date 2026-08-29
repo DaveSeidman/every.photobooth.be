@@ -17,7 +17,7 @@ const booleanFromEnv = (name, fallback) => {
 export const config = {
   port: numberFromEnv("PORT", 8000),
   falKey: process.env.FAL_KEY ?? "",
-  falModel: process.env.FAL_MODEL || "fal-ai/nano-banana/edit",
+  falModel: process.env.FAL_MODEL || "fal-ai/flux-2-flex/edit",
   animationEnabled: booleanFromEnv("ENABLE_ANIMATION", true),
   uploadMaxBytes: numberFromEnv("UPLOAD_MAX_MB", 15) * 1024 * 1024,
   directories: {

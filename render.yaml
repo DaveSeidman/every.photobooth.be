@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: every-photobooth-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: FAL_KEY
+        sync: false
+      - key: FAL_MODEL
+        value: fal-ai/flux-2-flex/edit
+      - key: ENABLE_ANIMATION
+        value: "false"

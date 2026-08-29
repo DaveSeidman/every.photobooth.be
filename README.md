@@ -46,3 +46,7 @@ Add a `FAL_KEY` before submitting a real photo. The health endpoint remains avai
 `every.one.in` keeps the cumulative master image in process memory and feeds it back into the next generation. A process restart clears the room; production should move this state to an expiring database/object store. `POST /sessions/reset` clears a session explicitly.
 
 The PostHog mode is sponsor-inspired (sage desktop surface, event/funnel/retention motifs, orange accents) and does not copy logos or readable product UI.
+
+## Deploy on Render (free)
+
+Create a new Web Service from this repository and use the included `render.yaml` blueprint (or set `npm install` as the build command and `npm start` as the start command). Add `FAL_KEY` as a secret environment variable. The free service uses ephemeral disk and in-memory cumulative sessions, so a sleep/restart clears `every.one.in` memory and generated files. Set `ENABLE_ANIMATION=true` only when you want the extra background animation work.
