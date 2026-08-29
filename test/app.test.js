@@ -20,6 +20,16 @@ before(async () => {
         uploads: path.join(temporaryDirectory, "uploads"),
         photos: path.join(temporaryDirectory, "photos"),
       },
+      labels: {
+        variantA: "Thesis Blue",
+        original: "Source Portrait",
+        variantB: "Thesis Coral",
+      },
+      prompts: {
+        variantA: "screenprint blue",
+        variantB: "#FF7B70 coral screenprint",
+        transition: "riso collage",
+      },
     },
   });
 });

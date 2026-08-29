@@ -6,7 +6,6 @@ import { config, publicConfig } from "./config.js";
 import { ensureDirectories, createUploadMiddleware } from "./utils/fileUtils.js";
 import { createFalEditor } from "./utils/falUtils.js";
 import { composeStrip, resizeForModel } from "./utils/imageUtils.js";
-import { createPrintSheet, sendToPrintServer } from "./utils/printUtils.js";
 import { createTransitionAnimation } from "./utils/animationUtils.js";
 
 export function createApp(overrides = {}) {
@@ -81,23 +80,11 @@ export function createApp(overrides = {}) {
           photoId,
           photo: `/photos/${photoId}.jpg`,
           animation: runtimeConfig.animationEnabled ? `/photos/${photoId}.gif` : null,
+          printStatus: "coming-soon",
         },
       });
 
       void (async () => {
-        try {
-          const printPath = await createPrintSheet(
-            stripPath,
-            runtimeConfig.directories.photos,
-            photoId,
-            runtimeConfig.strip,
-            runtimeConfig.printGamma,
-          );
-          await sendToPrintServer(printPath, runtimeConfig.printServerUrl);
-        } catch (error) {
-          console.error("Print pipeline failed:", error.message);
-        }
-
         if (runtimeConfig.animationEnabled) {
           try {
             await createTransitionAnimation({

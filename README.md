@@ -8,9 +8,8 @@ Express service for the Every / Thesis: 2027 AI photobooth. It preserves the pro
 2. The image is normalized and uploaded to FAL.
 3. Two edits run in parallel using `variantAPrompt` and `variantBPrompt`.
 4. The two edits and original are composed into a 600 × 1800 strip.
-5. The response returns immediately with both generated image URLs and a `photoId`.
-6. A two-up 1200 × 1800 print file is created in the background and sent only when `PRINT_SERVER_URL` is configured.
-7. An optional transformed GIF is created in the background for the mobile takeaway.
+5. The response returns immediately with both generated image URLs, a `photoId`, and `printStatus: "coming-soon"`.
+6. An optional transformed GIF is created in the background for the mobile takeaway.
 
 Legacy request fields (`pastPrompt`, `futurePrompt`, `removePrompt`) and response fields (`past`, `future`) remain available during migration.
 
@@ -38,4 +37,4 @@ Add a `FAL_KEY` before submitting a real photo. The health endpoint remains avai
 - Replace `assets/strip-background.svg` or point `STRIP_BACKGROUND` at a different asset.
 - Set prompt and label variables in `.env` for a different event or colorway.
 - Adjust strip dimensions and panel placement with the `STRIP_*` and `PHOTO_*` variables.
-- Set `PRINT_SERVER_URL` to the new event print relay. Printing is safe-by-default and disabled when it is blank.
+- Printing is intentionally disabled; the frontend shows “Print edition coming soon.” The existing print utility is kept isolated for a later printer integration.

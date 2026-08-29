@@ -18,8 +18,6 @@ export const config = {
   port: numberFromEnv("PORT", 8000),
   falKey: process.env.FAL_KEY ?? "",
   falModel: process.env.FAL_MODEL || "fal-ai/nano-banana/edit",
-  printServerUrl: process.env.PRINT_SERVER_URL ?? "",
-  printGamma: numberFromEnv("PRINT_GAMMA", 1.15),
   animationEnabled: booleanFromEnv("ENABLE_ANIMATION", true),
   uploadMaxBytes: numberFromEnv("UPLOAD_MAX_MB", 15) * 1024 * 1024,
   directories: {
@@ -53,7 +51,7 @@ export function publicConfig(runtimeConfig = config) {
     labels: runtimeConfig.labels,
     prompts: runtimeConfig.prompts,
     features: {
-      print: Boolean(runtimeConfig.printServerUrl),
+      print: false,
       animation: runtimeConfig.animationEnabled,
     },
   };
