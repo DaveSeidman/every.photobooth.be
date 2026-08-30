@@ -36,6 +36,13 @@ export const modeDefinitions = [
     color: "#F59E0B",
     developerOnly: true,
   },
+  {
+    id: "every.future.familiar",
+    label: "Every Future Familiar",
+    description: "Your chosen future escapes from your phone as a living symbol.",
+    color: "#A8F0D0",
+    developerOnly: true,
+  },
 ];
 
 export function publicModes() {
@@ -69,7 +76,7 @@ export function designerPromptOptions(options = {}) {
   };
 }
 
-export function modePrompts({ mode, basePrompts, oracleContext = {}, designerOptions = {}, hasMemory = false }) {
+export function modePrompts({ mode, basePrompts, oracleContext = {}, designerOptions = {}, futureChoice = "builder", hasMemory = false }) {
   const oracle = sanitizeOracleContext(oracleContext);
   const designer = designerPromptOptions(designerOptions);
   const oracleClues = [oracle.city, oracle.industry, oracle.role].filter(Boolean).join(", ") || "a thoughtful, future-facing attendee";
@@ -96,6 +103,13 @@ export function modePrompts({ mode, basePrompts, oracleContext = {}, designerOpt
   if (mode === "branded.posthog") {
     const base = `Recreate the SOURCE IMAGE as a playful PostHog-sponsored product-analytics portrait. Preserve exact framing, crop, camera angle, recognizable faces, number of people, poses, and body proportions. Use a pale sage-green desktop-like field, chunky black-and-white stippled cutout people, orange and warm yellow accent blocks, gentle paper texture, and a few abstract analytics motifs such as event dots, funnels, retention curves, heatmap cells, feature flags, or a tiny friendly hog-like silhouette. Make it feel like an imaginative operating system interface made of paper and ink, not a literal screenshot. Never generate the PostHog logo, brand wordmark, readable UI text, watermark, or objects over faces. Keep the people the hero.`;
     return { variantA: base, variantB: `${base} Use a cobalt-blue accent and a different abstract analytics motif, with the same people and composition.`, transition: base };
+  }
+
+  if (mode === "every.future.familiar") {
+    const familiars = { builder: "a bright fox", designer: "a jewel-winged moth", inventor: "a small mechanical owl" };
+    const familiar = familiars[futureChoice] || familiars.builder;
+    const base = `Transform the SOURCE IMAGE into an Every Future Familiar portrait. Preserve every person's exact recognizable face, facial expression, eye direction, hair, clothing, skin tone, pose, camera angle, sharpness, white balance, exposure, contrast, and natural color. Every person is visibly holding up a smartphone toward camera. On each phone screen, show a small stippled black-and-white illustration of ${familiar}. Make that same ${familiar} emerge from each phone and fly around the people’s heads in a mystical dance: inside the phone it is an engraved newspaper-style creature; outside the phone it becomes a hyper-real, highly stylized creature with luminous fairy trails, while remaining visually connected to the phone. Keep the plain background and existing light exactly as photographed. Do not add people, phones that are not held, objects, scenery, text, logos, watermarks, panels, rectangles, or collage. Do not obscure faces or invent extra limbs.`;
+    return { variantA: base, variantB: `${base} Use a second, more graphic trail arrangement while keeping the same creature and people.`, transition: base };
   }
 
   return basePrompts;

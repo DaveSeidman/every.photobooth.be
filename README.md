@@ -47,6 +47,8 @@ Add a `FAL_KEY` before submitting a real photo. The health endpoint remains avai
 
 The PostHog mode is sponsor-inspired (sage desktop surface, event/funnel/retention motifs, orange accents) and does not copy logos or readable product UI.
 
+`every.future.familiar` accepts `futureChoice` (`builder`, `designer`, or `inventor`) and directs the editor to turn a stippled animal on each attendee's phone into a vivid, fairy-trail creature escaping into the photograph.
+
 ## Deploy on Render (free)
 
 Create a new Web Service from this repository and use the included `render.yaml` blueprint (or set `npm install` as the build command and `npm start` as the start command). Add `FAL_KEY` as a secret environment variable. The Starter plan is the always-on ~$7/month tier with 512 MB RAM; its local disk is still ephemeral across service replacement, so use it for the event session but move long-term photos/session state to object storage or a database later. Set `ENABLE_ANIMATION=true` only when you want the extra background animation work.

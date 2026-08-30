@@ -66,6 +66,7 @@ test("creative modes and session reset are available", async () => {
     "every.oracle",
     "every.designer",
     "branded.posthog",
+    "every.future.familiar",
   ]);
   const reset = await request(app).post("/sessions/reset").send({ sessionId: "demo-room" }).expect(200);
   assert.equal(reset.body.session.count, 0);

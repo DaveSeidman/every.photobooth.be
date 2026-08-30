@@ -72,11 +72,13 @@ export function createApp(overrides = {}) {
       const session = getSession(request.body.sessionId);
       const oracleContext = sanitizeOracleContext(parseJsonObject(request.body.oracleContext));
       const designerOptions = designerPromptOptions(parseJsonObject(request.body.designerOptions));
+      const futureChoice = ["builder", "designer", "inventor"].includes(request.body.futureChoice) ? request.body.futureChoice : "builder";
       const modeDefaults = modePrompts({
         mode,
         basePrompts: runtimeConfig.prompts,
         oracleContext,
         designerOptions,
+        futureChoice,
         hasMemory: mode === "every.one.in" && Boolean(session.masterUrl),
       });
       const variantAPrompt = request.body.variantAPrompt || request.body.pastPrompt || modeDefaults.variantA;
@@ -115,6 +117,7 @@ export function createApp(overrides = {}) {
           mode,
           groupCount: mode === "every.one.in" ? session.count + 1 : undefined,
           oracle: mode === "every.oracle" ? { enabled: true, message: "A little context, carefully used." } : undefined,
+          futureChoice: mode === "every.future.familiar" ? futureChoice : undefined,
         },
       });
 
