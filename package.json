@@ -6,7 +6,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch index.js --watch app.js --watch config.js --watch modes.js --watch utils --ext js,json index.js",
+    "dev": "nodemon --watch index.js --watch app.js --watch config.js --watch modes.js --watch realtime.js --watch utils --ext js,json index.js",
     "start": "node index.js",
     "test": "node --test",
     "test:every-styles": "node scripts/compare-every-styles.js",
@@ -25,7 +25,8 @@
     "multer": "^2.0.2",
     "node-addon-api": "^8.5.0",
     "node-fetch": "^3.3.2",
-    "sharp": "0.35.4"
+    "sharp": "0.35.4",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

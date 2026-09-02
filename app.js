@@ -5,7 +5,7 @@ import multer from "multer";
 import { config, publicConfig } from "./config.js";
 import { ensureDirectories, createUploadMiddleware } from "./utils/fileUtils.js";
 import { createFalEditor } from "./utils/falUtils.js";
-import { resizeForModel, saveRemoteImage } from "./utils/imageUtils.js";
+import { resizeForModel, saveRemoteImage, saveSourceImage } from "./utils/imageUtils.js";
 import { normalizeMode, publicEveryStyles, publicModes, styleTransferSpec } from "./modes.js";
 
 export function createApp(overrides = {}) {
@@ -75,6 +75,11 @@ export function createApp(overrides = {}) {
         photoId,
         sourceBuffer: modelBuffer,
       });
+      await saveSourceImage({
+        sourceBuffer: modelBuffer,
+        outputDirectory: runtimeConfig.directories.photos,
+        photoId,
+      });
 
       response.json({
         success: true,
@@ -88,6 +93,7 @@ export function createApp(overrides = {}) {
           future: styledUrl,
           photoId,
           photo: `/photos/${photoId}.jpg`,
+          sourcePhoto: `/photos/${photoId}-source.jpg`,
           animation: null,
           printStatus: "coming-soon",
           mode,

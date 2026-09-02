@@ -16,6 +16,15 @@ export function resizeForModel(filePath, width = 1024) {
     .toBuffer();
 }
 
+export async function saveSourceImage({ sourceBuffer, outputDirectory, photoId }) {
+  const outputPath = path.join(outputDirectory, `${photoId}-source.jpg`);
+  await sharp(sourceBuffer)
+    .rotate()
+    .jpeg({ quality: 92, chromaSubsampling: "4:4:4" })
+    .toFile(outputPath);
+  return outputPath;
+}
+
 export async function saveRemoteImage({ url, outputDirectory, photoId, sourceBuffer }) {
   const image = await fetchBuffer(url);
   const outputPath = path.join(outputDirectory, `${photoId}.jpg`);

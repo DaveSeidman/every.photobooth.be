@@ -25,6 +25,8 @@ Set `FAL_KEY` in `.env`. The API runs on `http://localhost:8000`.
 
 The repository's `render.yaml` creates one paid `0.5c-512mb` Node web service with a 1 GB persistent disk mounted at `/opt/render/project/src/storage`. Both uploads and completed takeaway images are written beneath that mount.
 
+The same service also accepts WebSocket connections at `/ws`. Render terminates TLS, so deployed clients connect with `wss://<service>.onrender.com/ws`; no second service or port is required. Clients reconnect after deploys or transient disconnects, and the server sends heartbeat pings to retire stale sessions.
+
 1. Push the backend repository to GitHub.
 2. In Render, choose **New → Blueprint** and connect `DaveSeidman/every.photobooth.be`.
 3. During Blueprint creation, enter `FAL_KEY` when prompted.
@@ -41,5 +43,7 @@ The repository's `render.yaml` creates one paid `0.5c-512mb` Node web service wi
 - `GET /modes` — `every` and `posthog`
 - `POST /submit` — multipart form with `photo`, `mode`, and `style`
 - `GET /photos/:id.jpg` — finished takeaway image
+- `GET /photos/:id-source.jpg` — the matching camera portrait
+- `WS /ws` — kiosk/phone presence, synchronized portrait positions, and timed handoff events
 
 Printing and animation are intentionally disabled.
