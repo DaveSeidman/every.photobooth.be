@@ -1,19 +1,17 @@
 # Every Photobooth Backend
 
-Express service for the Every / Thesis: 2027 AI photobooth. It preserves the proven Halloween data flow while replacing its theme-specific copy, assets, prompts, URLs, and print-server assumptions.
+Express service for the Every text-directed AI portrait booth.
 
-## Flow
+## Every styles
 
-1. `POST /submit` receives one `photo` image.
-2. The image is normalized and uploaded to FAL.
-3. Two edits run in parallel using `variantAPrompt` and `variantBPrompt`.
-4. The two edits and original are composed into a 600 × 1800 strip.
-5. The response returns immediately with both generated image URLs, a `photoId`, and `printStatus: "coming-soon"`.
-6. An optional transformed GIF is created in the background for the mobile takeaway.
+- Weights & Measures
+- Digital Twins
+- Future of Work
+- Black & White
 
-Legacy request fields (`pastPrompt`, `futurePrompt`, `removePrompt`) and response fields (`past`, `future`) remain available during migration.
+Only the source portrait is sent to `fal-ai/nano-banana/edit`. Reference images remain local research material and are never included in inference requests. The finished image is saved with the original camera frame notched into its upper-left corner.
 
-## Setup
+## Local setup
 
 ```bash
 cp .env.example .env
@@ -21,34 +19,27 @@ npm install
 npm run dev
 ```
 
-Add a `FAL_KEY` before submitting a real photo. The health endpoint remains available without one.
+Set `FAL_KEY` in `.env`. The API runs on `http://localhost:8000`.
 
-## Endpoints
+## Render deployment
 
-- `GET /` — health and AI configuration state
-- `GET /config` — public labels, prompts, and feature flags
-- `GET /prompts` — prompt configuration plus legacy aliases
-- `POST /submit` — multipart upload; required field: `photo`
-- `GET /photos/:filename` — completed strips, animations, and print files
+The repository's `render.yaml` creates one paid `0.5c-512mb` Node web service with a 1 GB persistent disk mounted at `/opt/render/project/src/storage`. Both uploads and completed takeaway images are written beneath that mount.
 
-## Theming hooks
+1. Push the backend repository to GitHub.
+2. In Render, choose **New → Blueprint** and connect `DaveSeidman/every.photobooth.be`.
+3. During Blueprint creation, enter `FAL_KEY` when prompted.
+4. Deploy, then copy the service's final `https://…onrender.com` URL.
+5. In the frontend GitHub repository, create the Actions variable `VITE_API_URL` with that URL and enable GitHub Pages with **GitHub Actions** as the source.
 
-- The default prompts create Thesis-inspired screenprinted speaker portraits: monochrome cutouts on electric blue or coral fields with rough swashes, halftone dots, paper grain, and imperfect registration.
-- Replace `assets/strip-background.svg` or point `STRIP_BACKGROUND` at a different asset.
-- Set prompt and label variables in `.env` for a different event or colorway.
-- Adjust strip dimensions and panel placement with the `STRIP_*` and `PHOTO_*` variables.
-- Printing is intentionally disabled; the frontend shows “Print edition coming soon.” The existing print utility is kept isolated for a later printer integration.
+`ALLOWED_ORIGINS` defaults in the Blueprint to `https://daveseidman.github.io`. Add a comma-separated origin if the kiosk later uses a custom domain. Render filesystems are otherwise ephemeral, and persistent disks require a paid service. A disk-backed service runs as a single instance and has brief downtime during deploys.
 
-## Creative modes
+## API
 
-`GET /modes` exposes the available experience modes. `POST /submit` accepts `mode` and `sessionId`; Oracle requests may include a JSON `oracleContext` with only short, consented fields (`firstName`, `city`, `industry`, `role`, `company`). No LinkedIn lookup is performed by this service. Designer requests may include `designerOptions` (`palette`, `brushX`, `brushY`, `texture`).
+- `GET /` — service information
+- `GET /health` — Render health check
+- `GET /config` — labels, features, and modes
+- `GET /modes` — `every` and `posthog`
+- `POST /submit` — multipart form with `photo`, `mode`, and `style`
+- `GET /photos/:id.jpg` — finished takeaway image
 
-`every.one.in` keeps the cumulative master image in process memory and feeds it back into the next generation. A process restart clears the room; production should move this state to an expiring database/object store. `POST /sessions/reset` clears a session explicitly.
-
-The PostHog mode is sponsor-inspired (sage desktop surface, event/funnel/retention motifs, orange accents) and does not copy logos or readable product UI.
-
-`every.future.familiar` accepts `futureChoice` (`builder`, `designer`, or `inventor`) and directs the editor to turn a stippled animal on each attendee's phone into a vivid, fairy-trail creature escaping into the photograph.
-
-## Deploy on Render (free)
-
-Create a new Web Service from this repository and use the included `render.yaml` blueprint (or set `npm install` as the build command and `npm start` as the start command). Add `FAL_KEY` as a secret environment variable. The Starter plan is the always-on ~$7/month tier with 512 MB RAM; its local disk is still ephemeral across service replacement, so use it for the event session but move long-term photos/session state to object storage or a database later. Set `ENABLE_ANIMATION=true` only when you want the extra background animation work.
+Printing and animation are intentionally disabled.

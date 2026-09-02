@@ -1,116 +1,135 @@
-const safeText = (value, max = 80) => typeof value === "string" ? value.trim().slice(0, max) : "";
-
 export const modeDefinitions = [
   {
-    id: "thesis.editorial",
-    label: "Thesis editorial",
-    description: "Blue/coral screenprinted portrait studies.",
+    id: "every",
+    label: "Every",
+    description: "One of four focused Every editorial treatments, chosen by the guest.",
     color: "#2B83EE",
     developerOnly: false,
   },
   {
-    id: "every.one.in",
-    label: "Every One In",
-    description: "A cumulative group portrait that remembers the room.",
-    color: "#FF7B70",
-    developerOnly: true,
-  },
-  {
-    id: "every.oracle",
-    label: "Every Oracle",
-    description: "A consent-safe portrait with subtle signals from attendee context.",
-    color: "#31C8F5",
-    developerOnly: true,
-  },
-  {
-    id: "every.designer",
-    label: "Every Designer",
-    description: "A guest-adjustable print composition before generation.",
-    color: "#FFDE3D",
-    developerOnly: true,
-  },
-  {
-    id: "branded.posthog",
-    label: "Branded / PostHog",
-    description: "A sponsor skin inspired by product analytics and desktop tools.",
+    id: "posthog",
+    label: "PostHog",
+    description: "PostHog-inspired product-engineering portrait treatment.",
     color: "#F59E0B",
-    developerOnly: true,
-  },
-  {
-    id: "every.future.familiar",
-    label: "Every Future Familiar",
-    description: "Your chosen future escapes from your phone as a living symbol.",
-    color: "#A8F0D0",
-    developerOnly: true,
+    developerOnly: false,
   },
 ];
+
+const identityLock = `IMAGE 1 is the only source photograph. Preserve exactly the same number of original human subjects and every person's recognizable identity, exact facial features, facial expression, eye direction, smile, hair, skin tone, and social chemistry. Do not omit, merge, replace, beautify, age, or de-age any original person. Keep every original face unobstructed and unmistakably recognizable.`;
+
+const compositionLock = `LOCK THE SOURCE COMPOSITION. Keep every original person's head size, body size, anatomy, body proportions, pose, silhouette, position in the frame, spacing, overlaps, relative scale, camera angle, perspective, and crop unchanged. Keep each face, head, shoulder, torso, hand, and limb at the same coordinates as IMAGE 1. Do not zoom, reframe, rotate, widen, compress, rearrange, or reposition the original subjects. Apply the treatment around and across this fixed photographic registration.`;
+
+const noText = `NO TEXT: Do not render letters, words, numbers, captions, headlines, logos, watermarks, signatures, labels, signage, interface copy, or decorative pseudo-text anywhere.`;
+
+const noBorder = `EDGE-TO-EDGE ARTWORK: Extend the scene naturally and continuously to all four canvas edges. Do not add a border, frame, mat, inset panel, picture edge, poster outline, decorative perimeter, bounding rectangle, card, vignette, white margin, or colored band around the image.`;
+
+export const blackWhiteBackgroundColors = [
+  "saturated mustard yellow",
+  "electric ultramarine blue",
+  "deep royal violet",
+  "pale mint green",
+  "warm coral",
+  "soft lavender",
+  "bright cyan",
+  "warm cream",
+];
+
+export const everyStyleDefinitions = [
+  {
+    id: "weights-measures",
+    label: "Weights & Measures",
+    description: "Your portrait mapped with architectural lines, proportion, and precision.",
+    prompt: `${compositionLock}
+
+Turn the fixed portrait into a disciplined editorial study of human proportion, measurement, and constructed intelligence. Keep the people dominant and precisely registered while integrating a coherent graphic system of rulers, measuring tapes, protractors, drafting compasses, plumb lines, surveyor sight-lines, vanishing points, Cartesian x/y/z axes, perspective grids, dimension arrows, crop marks, architectural blueprint fragments, Vitruvian circles, proportional divisions, and restrained radial geometry.
+
+Every measuring element must be a flat two-dimensional drafting overlay made from fine ink lines, translucent blueprint lines, ticks, arcs, and registration marks. Never render a photorealistic ruler, physical protractor, wooden measuring stick, metal tool, cast shadow, hand-held instrument, or three-dimensional measuring object. Make the overlays visibly respond to the portrait: align baselines to shoulders and eye-lines, center arcs around heads or joints, extend sight-lines along gaze direction, locate axes in the scene's perspective, bracket the group's width and height, and let proportional grids follow the existing spatial relationships without covering faces.
+
+Use a limited two-to-four-color spot palette with one flat solid backplate: cobalt, electric blue, deep violet, mustard, warm cream, coral, or newsprint gray. Render the people as crisp high-contrast photographic engravings with stippling, fine crosshatching, halftone dots, paper grain, and subtle ink misregistration. Geometry must feel intentional, sparse, and precise—not like a fake scientific infographic or a collection of unrelated decorations. Use three or four strong overlay systems at varied scales rather than filling every space. Tiny indecipherable drafting annotations and micro-label marks are allowed, but no readable language, equations, fake data, UI panels, charts, logos, or headlines.`,
+  },
+  {
+    id: "digital-twins",
+    label: "Digital Twins",
+    description: "Meet the android counterpart built from your pose and personality.",
+    prompt: `The composition may change for this treatment, but preserve every original human as a clearly identifiable human with their original face and expression. Add exactly one android twin for each original person—no more and no fewer. Each android should visibly echo its corresponding person's face, hair silhouette, pose language, or clothing shapes while remaining unmistakably robotic. Do not replace a person with a robot.
+
+Create a warm, surprising interaction between each person and their twin: high-fiving, mirroring a gesture, collaborating over an object, exchanging a tool, finishing one another's task, or looking together at one impossible artifact. Arrange all humans and android twins as one coherent scene with believable eye-lines, scale, contact, hands, lighting, and occlusion.
+
+Use an Every editorial language: one flat saturated backplate, high-contrast black-and-white copperplate engraving and stippling, tactile paper grain, clean cut-paper edges, and one or two spot colors. Blend classical and futuristic cues through restrained gardens, sculptural drapery, marble fragments, a glowing geometric object, an archive table, or monumental architecture. Choose one interaction and one setting; do not create a crowded robot showroom, a split screen, panels, duplicated human faces, or a generic sci-fi laboratory. ${noText}`,
+  },
+  {
+    id: "future-of-work",
+    label: "Future of Work",
+    description: "Wear the strange, tactile interfaces of work after automation.",
+    prompt: `${compositionLock}
+
+Transform the fixed portrait into a focused editorial vision of people working through intelligent machines. Integrate a small number of plausible near-future interfaces directly with the existing poses: elegant VR or spatial-computing visors, noninvasive fMRI-inspired headsets, brain-computer-interface sensors, articulated robotic assistance, bionic or exoskeletal limb overlays, haptic gloves, neural bands, transparent optical instruments, or a single luminous computational artifact. Select only two or three technologies that make sense with the photographed people; do not attach every device.
+
+The technology should feel tactile, credible, and wondrous—not dystopian, medical, militarized, or like generic cyberpunk. Keep all original human faces and expressions fully visible; never cover the eyes unless a visor is the singular central concept, and never amputate or replace an original limb. Use a bold flat backplate with no gradients, black-and-white stippled engraving and newspaper halftone for people and machines, a limited spot palette, and elegant orbital sight-lines or wave fields. Combine one classical humanist element with one advanced technology. Avoid gears, random cables, fake control panels, dashboards, diagrams, and meaningless technical clutter. ${noText}`,
+  },
+  {
+    id: "black-white",
+    label: "Black & White",
+    description: "Become a hand-engraved portrait against a vivid field of color.",
+    prompt: `${compositionLock}
+
+Fully redraw every person as a beautifully observed black-and-white engraved illustration while preserving their exact likeness and expression. The foreground transformation must be unmistakable at first glance: replace all continuous-tone photographic skin, hair, and clothing with clearly visible nineteenth-century copperplate linework, banknote engraving, dense stippling, directional hatching, crosshatching, pointillist dots, and newspaper halftone. Add the tactile character of fine pen-and-ink contour drawing, drypoint etching, scratchboard, and lithographic pencil marks. Let different mark-making methods describe different surfaces: stippling across skin, flowing pen hatches through hair, crosshatching in fabric shadows, and scratchboard-white accents along highlights. Use deep solid blacks, clean paper-white highlights, crisp etched contours, varied hatch direction, and visible dot structure. Do not merely desaturate, grayscale, posterize, or apply a weak monochrome filter to the original photograph. No smooth photographic shading may remain on the people.
+
+Keep eyes, teeth, hair texture, skin contours, clothing folds, and distinctive facial details sharp and recognizable. The engraved marks should follow facial planes, hair flow, fabric folds, and body volume rather than sit on top as a uniform texture. Avoid waxy faces, smudged shading, soft gray blur, low-contrast pencil drawing, vector-cartoon simplification, or a grayscale photograph with faint dots.
+
+Replace the background with exactly this assigned color: {{BACKGROUND_COLOR}}. Make it a simple, unmistakably flat solid field with no gradient and do not substitute blue unless blue is the assigned color. Add at most one quiet background motif selected to fit the portrait: dark cypress silhouettes, a clipped garden, a classical colonnade, an abacus-like pattern, butterflies, distant modernist architecture, or sparse botanical silhouettes. Keep the motif secondary and graphic; it must not form a border. Do not add diagrams, measuring devices, robots, togas, headsets, cables, collage panels, or visual clutter. ${noText}`,
+  },
+];
+
+const posthogDirection = `${compositionLock}
+
+Transform the portrait into a playful product-engineering editorial image inspired by an operating-system desktop built from paper and ink. Use a warm cream or pale sage flat field, thick black outlines, orange and yellow spot colors, subtle halftone texture, chunky window geometry, event dots, funnels, heatmap cells, feature flags, charts, cables, and one mischievous hog-like silhouette. Invent a single surreal metaphor about observing, testing, or shipping a product. Keep the people dominant and integrated into the scene. Do not create a literal website screenshot or a PostHog logo. ${noText}`;
+
+const everyStyleById = new Map(everyStyleDefinitions.map((style) => [style.id, style]));
 
 export function publicModes() {
   return modeDefinitions;
 }
 
+export function publicEveryStyles() {
+  return everyStyleDefinitions.map(({ id, label, description }) => ({ id, label, description }));
+}
+
 export function normalizeMode(mode) {
-  return modeDefinitions.some((candidate) => candidate.id === mode) ? mode : "thesis.editorial";
+  return modeDefinitions.some((candidate) => candidate.id === mode) ? mode : "every";
 }
 
-export function sanitizeOracleContext(context = {}) {
-  if (!context || typeof context !== "object" || Array.isArray(context)) return {};
+function selectEveryStyle(styleId) {
+  if (styleId && everyStyleById.has(styleId)) return everyStyleById.get(styleId);
+  return everyStyleDefinitions[Math.floor(Math.random() * everyStyleDefinitions.length)];
+}
+
+function resolveStylePrompt(style, palette) {
+  if (style.id !== "black-white") return style.prompt;
+  const selectedPalette = blackWhiteBackgroundColors.includes(palette)
+    ? palette
+    : blackWhiteBackgroundColors[Math.floor(Math.random() * blackWhiteBackgroundColors.length)];
+  return style.prompt.replace("{{BACKGROUND_COLOR}}", selectedPalette);
+}
+
+export function styleTransferSpec({ mode, styleId, palette } = {}) {
+  const normalizedMode = normalizeMode(mode);
+  if (normalizedMode === "posthog") {
+    return {
+      id: "posthog-editorial-v1",
+      label: "PostHog",
+      prompt: `${identityLock}\n\n${posthogDirection}\n\nReturn one unified finished editorial image. Preserve the people first; apply the art direction second.`,
+    };
+  }
+
+  const style = selectEveryStyle(styleId);
   return {
-    firstName: safeText(context.firstName, 40),
-    city: safeText(context.city, 60),
-    industry: safeText(context.industry, 80),
-    role: safeText(context.role, 80),
-    company: safeText(context.company, 80),
+    id: `every-${style.id}-v3`,
+    label: style.label,
+    prompt: `${identityLock}\n\n${resolveStylePrompt(style, palette)}\n\n${noBorder}\n\nReturn one unified finished editorial image, not a before-and-after layout or a sheet of alternatives. Preserve each original person's identity first; apply only this named art direction second.`,
   };
 }
 
-export function designerPromptOptions(options = {}) {
-  const palettes = new Set(["blue", "coral", "cyan", "gold"]);
-  const palette = palettes.has(options.palette) ? options.palette : "blue";
-  const numeric = (value, fallback) => Number.isFinite(Number(value)) ? Math.max(0, Math.min(100, Number(value))) : fallback;
-  return {
-    palette,
-    brushX: numeric(options.brushX, 50),
-    brushY: numeric(options.brushY, 50),
-    texture: options.texture === "fine" ? "fine" : "coarse",
-  };
-}
-
-export function modePrompts({ mode, basePrompts, oracleContext = {}, designerOptions = {}, futureChoice = "builder", hasMemory = false }) {
-  const oracle = sanitizeOracleContext(oracleContext);
-  const designer = designerPromptOptions(designerOptions);
-  const oracleClues = [oracle.city, oracle.industry, oracle.role].filter(Boolean).join(", ") || "a thoughtful, future-facing attendee";
-  const memoryInstruction = hasMemory
-    ? "The SECOND reference image is the existing cumulative group portrait. Keep every existing person in it and add the newest people from the SOURCE IMAGE at the visual center. Re-render everyone together as one single wide group photograph from one lens: shared light, consistent scale, feet and torsos anchored in the same scene, overlapping shoulders and arms, natural hugs and squeezes, believable occlusion and depth. Expand the composition sideways as the crowd grows. Do not invent disconnected hands, floating arms, duplicate limbs, or fake hands on shoulders; every hand and arm must attach to a visible body. Never paste rectangular photo panels or make a collage."
-    : "The SOURCE IMAGE contains the newest people. Preserve their natural spacing and pose as a group in one believable photobooth scene.";
-
-  if (mode === "every.one.in") {
-    const base = `Recreate the SOURCE IMAGE as an Every One In cumulative group portrait. ${memoryInstruction} CRITICAL PHOTOGRAPHIC FIDELITY LOCK: preserve every recognizable face exactly, including each person's exact facial expression, eye direction, smile shape, mouth position, hair, clothing, and skin tone. Preserve the original camera angle, focal length, crop, head proportions, perspective, sharpness, white balance, exposure, contrast, and natural color of the reference photographs. Do not beautify, sharpen, soften, relight, recolor, or change anyone's expression. Build a coherent, believable larger-and-larger group photo—not a row of portraits—with natural variation in head height, partial overlaps, shoulders, torsos, and realistic perspective. Use a tactile editorial screenprint treatment only after preserving the photographic evidence. The newest subjects must read as the center of the group and previous people must naturally flank them. No text, logos, watermarks, borders, floating cutout rectangles, disconnected anatomy, or duplicated faces.`;
-    return { variantA: base, variantB: `${base} Make this alternate take slightly more cyan and yellow while keeping the crowd complete.`, transition: base };
-  }
-
-  if (mode === "every.oracle") {
-    const base = `Recreate the SOURCE IMAGE as an Every Oracle portrait. Preserve exact framing, crop, camera angle, recognizable faces, poses, and body proportions. Render people as high-contrast black-and-white stippled newspaper cutouts on a single saturated cyan-blue backplate with one rough diagonal brush mark and subtle halftone/riso texture. Add only one or two quiet, symbolic visual motifs inspired by this attendee context: ${oracleClues}. The result should feel like a perceptive art director noticed their world, never like surveillance. Do not show or spell any context, names, companies, logos, readable text, literal UI, or private facts. No watermarks or borders.`;
-    return { variantA: base, variantB: `${base} Use a warm coral backplate and a different symbolic motif, keeping it subtle and human.`, transition: base };
-  }
-
-  if (mode === "every.designer") {
-    const colors = { blue: "electric blue", coral: "warm coral", cyan: "bright cyan", gold: "sunlit yellow" };
-    const base = `Recreate the SOURCE IMAGE as a guest-directed Every Designer editorial poster. Keep exact framing, crop, camera angle, recognizable faces, number of people, poses, and body proportions. Use a large flat ${colors[designer.palette]} backplate with a rough diagonal painterly brush swash positioned around ${designer.brushX}% horizontal and ${designer.brushY}% vertical. Render people as high-contrast black-and-white stippled newspaper cutouts with ${designer.texture} halftone, photocopy grain, paper fiber, and slight ink misregistration. Blend classical engraved references with one tasteful hyper-modern object or material, but keep people central and recognizable. No generated text, logos, watermarks, borders, or objects over faces.`;
-    return { variantA: base, variantB: `${base} Make the alternate composition use a complementary coral/cyan accent while honoring the guest's placement.`, transition: base };
-  }
-
-  if (mode === "branded.posthog") {
-    const base = `Recreate the SOURCE IMAGE as a playful PostHog-sponsored product-analytics portrait. Preserve exact framing, crop, camera angle, recognizable faces, number of people, poses, and body proportions. Use a pale sage-green desktop-like field, chunky black-and-white stippled cutout people, orange and warm yellow accent blocks, gentle paper texture, and a few abstract analytics motifs such as event dots, funnels, retention curves, heatmap cells, feature flags, or a tiny friendly hog-like silhouette. Make it feel like an imaginative operating system interface made of paper and ink, not a literal screenshot. Never generate the PostHog logo, brand wordmark, readable UI text, watermark, or objects over faces. Keep the people the hero.`;
-    return { variantA: base, variantB: `${base} Use a cobalt-blue accent and a different abstract analytics motif, with the same people and composition.`, transition: base };
-  }
-
-  if (mode === "every.future.familiar") {
-    const familiars = { builder: "a bright fox", designer: "a jewel-winged moth", inventor: "a small mechanical owl" };
-    const familiar = familiars[futureChoice] || familiars.builder;
-    const base = `Transform the SOURCE IMAGE into an Every Future Familiar portrait. Preserve every person's exact recognizable face, facial expression, eye direction, hair, clothing, skin tone, pose, camera angle, sharpness, white balance, exposure, contrast, and natural color. Every person is visibly holding up a smartphone toward camera. On each phone screen, show a small stippled black-and-white illustration of ${familiar}. Make that same ${familiar} emerge from each phone and fly around the people’s heads in a mystical dance: inside the phone it is an engraved newspaper-style creature; outside the phone it becomes a hyper-real, highly stylized creature with luminous fairy trails, while remaining visually connected to the phone. Keep the plain background and existing light exactly as photographed. Do not add people, phones that are not held, objects, scenery, text, logos, watermarks, panels, rectangles, or collage. Do not obscure faces or invent extra limbs.`;
-    return { variantA: base, variantB: `${base} Use a second, more graphic trail arrangement while keeping the same creature and people.`, transition: base };
-  }
-
-  return basePrompts;
+export function styleTransferPrompt(options) {
+  return styleTransferSpec(options).prompt;
 }

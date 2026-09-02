@@ -6,3 +6,4 @@ photos/*
 !photos/.gitkeep
 .DS_Store
 npm-debug.log*
+style-references/**/_source-*/

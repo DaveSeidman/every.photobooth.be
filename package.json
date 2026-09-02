@@ -6,16 +6,17 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch index.js --watch app.js --watch config.js --watch utils --ext js,json index.js",
+    "dev": "nodemon --watch index.js --watch app.js --watch config.js --watch modes.js --watch utils --ext js,json index.js",
     "start": "node index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:every-styles": "node scripts/compare-every-styles.js",
+    "test:thinking": "node scripts/compare-thinking-levels.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

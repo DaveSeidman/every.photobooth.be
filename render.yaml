@@ -2,14 +2,28 @@ services:
   - type: web
     name: every-photobooth-backend
     runtime: node
-    plan: starter
-    buildCommand: npm install
+    plan: 0.5c-512mb
+    buildCommand: npm ci
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /health
+    disk:
+      name: photobooth-images
+      mountPath: /opt/render/project/src/storage
+      sizeGB: 1
     envVars:
       - key: FAL_KEY
         sync: false
       - key: FAL_MODEL
-        value: fal-ai/flux-2-flex/edit
-      - key: ENABLE_ANIMATION
-        value: "false"
+        value: fal-ai/nano-banana/edit
+      - key: FAL_RESOLUTION
+        value: 1K
+      - key: FAL_THINKING_LEVEL
+        value: minimal
+      - key: FAL_TIMEOUT_MS
+        value: 30000
+      - key: DATA_DIR
+        value: /opt/render/project/src/storage
+      - key: ALLOWED_ORIGINS
+        value: https://daveseidman.github.io
+      - key: UPLOAD_MAX_MB
+        value: 15

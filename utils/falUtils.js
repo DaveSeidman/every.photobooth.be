@@ -1,5 +1,14 @@
 import { File } from "node:buffer";
+import path from "node:path";
 import { fal } from "@fal-ai/client";
+
+const mimeTypes = {
+  ".avif": "image/avif",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
 
 const extractFirstImageUrl = (result) => {
   const images = result?.data?.images;
@@ -7,12 +16,19 @@ const extractFirstImageUrl = (result) => {
   return typeof images[0] === "string" ? images[0] : images[0]?.url ?? null;
 };
 
-export function createFalEditor({ credentials, model }) {
+export function createFalEditor({
+  credentials,
+  model,
+  resolution = "1K",
+  thinkingLevel = "minimal",
+  timeoutMs = 30_000,
+}) {
   if (credentials) fal.config({ credentials });
 
   const upload = async (buffer, filename) => {
     if (!credentials) throw new Error("FAL_KEY is not configured.");
-    const file = new File([buffer], filename, { type: "image/jpeg" });
+    const type = mimeTypes[path.extname(filename).toLowerCase()] || "application/octet-stream";
+    const file = new File([buffer], filename, { type });
     const uploaded = await fal.storage.upload(file);
     const sourceUrl = typeof uploaded === "string" ? uploaded : uploaded?.file?.url;
     if (!sourceUrl) throw new Error("The source image could not be uploaded to FAL.");
@@ -20,35 +36,35 @@ export function createFalEditor({ credentials, model }) {
   };
 
   const edit = async (imageUrl, prompt) => {
+    const input = {
+      prompt,
+      image_urls: Array.isArray(imageUrl) ? imageUrl : [imageUrl],
+      num_images: 1,
+      output_format: "jpeg",
+      limit_generations: true,
+    };
+    if (model === "fal-ai/nano-banana-2/edit") {
+      input.resolution = resolution;
+      input.thinking_level = thinkingLevel;
+      input.enable_web_search = false;
+    }
     const result = await fal.subscribe(model, {
-      input: {
-        prompt,
-        image_urls: Array.isArray(imageUrl) ? imageUrl : [imageUrl],
-        num_images: 1,
-        output_format: "jpeg",
-      },
+      input,
       logs: false,
+      timeout: timeoutMs,
     });
     const outputUrl = extractFirstImageUrl(result);
     if (!outputUrl) throw new Error("The image model returned no output URL.");
     return outputUrl;
   };
 
-  const createVariantsFromSourceUrls = async (sourceUrls, variantAPrompt, variantBPrompt) => {
-    const [variantAUrl, variantBUrl] = await Promise.all([
-      edit(sourceUrls, variantAPrompt),
-      edit(sourceUrls, variantBPrompt),
-    ]);
-    return { sourceUrl: sourceUrls[0], variantAUrl, variantBUrl };
-  };
-
   return {
     upload,
-    async createVariants(buffer, filename, variantAPrompt, variantBPrompt, additionalImageUrls = []) {
-      const sourceUrl = await upload(buffer, filename);
-      return createVariantsFromSourceUrls([sourceUrl, ...additionalImageUrls.filter(Boolean)], variantAPrompt, variantBPrompt);
+    async styleTransfer(sourceBuffer, sourceFilename, prompt) {
+      const sourceUrl = await upload(sourceBuffer, sourceFilename);
+      const styledUrl = await edit([sourceUrl], prompt);
+      return { sourceUrl, styledUrl };
     },
-    createVariantsFromSourceUrls,
     edit,
   };
 }
