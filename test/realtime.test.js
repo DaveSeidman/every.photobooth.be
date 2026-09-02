@@ -32,8 +32,7 @@ async function connect(role) {
   });
   const session = waitFor(socket, "session");
   socket.send(JSON.stringify({ type: "join", photoId: "portrait-123", role }));
-  await session;
-  return socket;
+  return { socket, session: await session };
 }
 
 before(async () => {
@@ -49,25 +48,38 @@ after(async () => {
   await new Promise((resolve) => server.close(resolve));
 });
 
-test("kiosk and phone share presence, card positions, and a scheduled transfer", async () => {
-  const kiosk = await connect("kiosk");
+test("kiosk and phone share continuous card positions and one-time handoff completion", async () => {
+  const { socket: kiosk } = await connect("kiosk");
   const kioskPresence = waitFor(kiosk, "presence");
-  const phone = await connect("phone");
+  const { socket: phone } = await connect("phone");
   assert.equal((await kioskPresence).phones, 1);
 
   const cardMove = waitFor(phone, "card:move");
-  kiosk.send(JSON.stringify({ type: "card:move", card: "styled", x: 0.42, y: 0.61, dragging: true }));
+  kiosk.send(JSON.stringify({
+    type: "card:move",
+    card: "styled",
+    x: 0.42,
+    y: 0.61,
+    phoneX: 1.24,
+    phoneY: 0.47,
+    rotation: 2,
+    dragging: true,
+  }));
   assert.deepEqual(await cardMove, {
     type: "card:move",
     card: "styled",
     x: 0.42,
     y: 0.61,
+    phoneX: 1.24,
+    phoneY: 0.47,
+    rotation: 2,
     dragging: true,
   });
 
-  const transfer = waitFor(phone, "handoff:transfer");
-  kiosk.send(JSON.stringify({ type: "handoff:transfer" }));
-  const transferMessage = await transfer;
-  assert.ok(transferMessage.startAt > Date.now());
-  assert.ok(transferMessage.version);
+  const completion = waitFor(phone, "handoff:complete");
+  kiosk.send(JSON.stringify({ type: "handoff:complete" }));
+  assert.ok((await completion).version);
+
+  const { session: lateSession } = await connect("phone");
+  assert.equal(lateSession.completed, undefined, "a completed handoff must not replay when a phone reconnects");
 });

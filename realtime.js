@@ -3,8 +3,18 @@ import { WebSocket, WebSocketServer } from "ws";
 const PHOTO_ID_PATTERN = /^[a-zA-Z0-9-]{6,80}$/;
 const ROOM_TTL_MS = 10 * 60 * 1000;
 
-function clamp(value) {
-  return Math.max(0, Math.min(1, Number(value) || 0));
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
+}
+
+function cardPosition(message) {
+  return {
+    x: clamp(message.x, -1, 2),
+    y: clamp(message.y, -1, 2),
+    phoneX: clamp(message.phoneX, -3, 4),
+    phoneY: clamp(message.phoneY, -3, 4),
+    rotation: clamp(message.rotation, -30, 30),
+  };
 }
 
 function roomSnapshot(room) {
@@ -14,7 +24,6 @@ function roomSnapshot(room) {
     kiosks: clients.filter((client) => client.role === "kiosk").length,
     cards: room.cards,
     moved: room.moved,
-    transfer: room.transfer,
   };
 }
 
@@ -39,11 +48,10 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
       rooms.set(photoId, {
         clients: new Set(),
         cards: {
-          original: { x: 0.7, y: 0.3 },
-          styled: { x: 0.76, y: 0.62 },
+          original: { x: 0.7, y: 0.3, phoneX: 2, phoneY: 0.3, rotation: -3 },
+          styled: { x: 0.76, y: 0.62, phoneX: 2, phoneY: 0.62, rotation: 2 },
         },
         moved: false,
-        transfer: null,
         updatedAt: Date.now(),
       });
     }
@@ -90,7 +98,7 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
 
       if (message.type === "card:move" && socket.role === "kiosk" && ["original", "styled"].includes(message.card)) {
         socket.room.moved = true;
-        socket.room.cards[message.card] = { x: clamp(message.x), y: clamp(message.y) };
+        socket.room.cards[message.card] = cardPosition(message);
         broadcast(socket.room, {
           type: "card:move",
           card: message.card,
@@ -99,9 +107,8 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
         });
       }
 
-      if (message.type === "handoff:transfer" && socket.role === "kiosk") {
-        socket.room.transfer = { startAt: Date.now() + 900, version: Date.now() };
-        broadcast(socket.room, { type: "handoff:transfer", ...socket.room.transfer });
+      if (message.type === "handoff:complete" && socket.role === "kiosk") {
+        broadcast(socket.room, { type: "handoff:complete", version: Date.now() });
       }
     });
 
