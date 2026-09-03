@@ -81,9 +81,17 @@ Replace the background with exactly this assigned color: {{BACKGROUND_COLOR}}. M
   },
 ];
 
-const posthogDirection = `${compositionLock}
+const posthogDirection = `Reimagine every person in IMAGE 1 as one distinct, irresistibly cute hedgehog character in a handcrafted miniature paper diorama. Preserve the exact number of people: create exactly one hedgehog for each person, no more and no fewer. Make each character recognizable through their original pose, hair silhouette, clothing colors, glasses, and relationship to the other people.
 
-Transform the portrait into a playful product-engineering editorial image inspired by an operating-system desktop built from paper and ink. Use a warm cream or pale sage flat field, thick black outlines, orange and yellow spot colors, subtle halftone texture, chunky window geometry, event dots, funnels, heatmap cells, feature flags, charts, cables, and one mischievous hog-like silhouette. Invent a single surreal metaphor about observing, testing, or shipping a product. Keep the people dominant and integrated into the scene. Do not create a literal website screenshot or a PostHog logo. ${noText}`;
+IDENTITY DEVICE: Each hedgehog wears a small, glossy, die-cut paper mask printed with that corresponding person's real photographic face from IMAGE 1. Reproduce the person's recognizable facial identity, exact expression, smile, eye direction, facial proportions, skin tone, facial hair, and glasses on the mask with high fidelity. Make the mask unmistakably physical: slightly curved coated paper stock, a crisp white cut edge with visible thickness, bright controlled varnish reflections, and a faint printed halftone or paper fiber texture. Keep the entire mask shape visible against the hedgehog's darker paper spines. Attach some masks with thin string or elastic visibly wrapping around the sides of the hedgehog's head; attach others with two or three tiny, believable pieces of translucent matte Scotch tape at the temples or forehead. Show subtle tape edges and highlights without covering the printed eyes, nose, or mouth. Vary these attachment methods naturally across the group.
+
+Shape each mask neatly around the person's face and keep it frontal enough to recognize immediately. It must read as a deliberate printed paper face mask worn by a cute cardboard hedgehog—not a human head grafted onto an animal, exposed human skin, a flat floating photo rectangle, a framed portrait, or a horror mask. Give every hedgehog exactly one mask belonging to the correct person; never swap, blend, duplicate, or invent faces.
+
+Build a unified low-poly world from colored cardboard, folded construction paper, cut paper, and tiny hand-crafted materials. The entire floor must be a broad, gently textured pale-sage paper meadow extending to every edge and far into the background. Populate the meadow with many scattered clusters of individually folded paper grass blades: narrow angular strips creased up from the ground, in varied heights and several related sage and olive tones. Distribute the grass organically across foreground, middle distance, and background, with denser patches around the hedgehogs and ample quiet space between clusters. Each blade should cast a tiny directional shadow so the field clearly reads as handcrafted dimensional paper, matching an elegant tabletop diorama rather than real turf or a flat printed grass texture.
+
+Add soft directional sunlight, long gentle shadows, a few restrained garden beds, wooden crates, translucent paper water, and chunky geometric blocks. Let the hedgehogs play, garden, explore, share food, or collaborate around one whimsical product-research object. The visual language is warm, cutesy, tactile, restrained, and premium: visible folded facets, paper fibers, beveled cardboard edges, miniature scale, and soft studio lighting.
+
+Compose the group together near the center and keep every hedgehog fully visible. Leave useful calm negative space around the group. Avoid photoreal humans, plush toys, plastic figurines, generic woodland illustration, a website screenshot, UI windows, readable text, logos, extra animals, duplicated characters, borders, frames, collages, gradients, or a busy background. ${noText}`;
 
 const everyStyleById = new Map(everyStyleDefinitions.map((style) => [style.id, style]));
 
@@ -116,9 +124,9 @@ export function styleTransferSpec({ mode, styleId, palette } = {}) {
   const normalizedMode = normalizeMode(mode);
   if (normalizedMode === "posthog") {
     return {
-      id: "posthog-editorial-v1",
-      label: "PostHog",
-      prompt: `${identityLock}\n\n${posthogDirection}\n\nReturn one unified finished editorial image. Preserve the people first; apply the art direction second.`,
+      id: "posthog-paper-mask-hedgehogs-v4",
+      label: "Paper Hedgehog World",
+      prompt: `${posthogDirection}\n\n${noBorder}\n\nReturn one unified finished landscape-oriented paper-diorama image.`,
     };
   }
 

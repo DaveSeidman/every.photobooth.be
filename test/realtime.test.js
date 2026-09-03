@@ -54,31 +54,32 @@ test("kiosk and phone share continuous card positions and one-time handoff compl
   const { socket: phone } = await connect("phone");
   assert.equal((await kioskPresence).phones, 1);
 
-  const cardMove = waitFor(phone, "card:move");
+  const cardMove = waitFor(phone, "cards:move");
   kiosk.send(JSON.stringify({
-    type: "card:move",
-    card: "styled",
-    x: 0.42,
-    y: 0.61,
-    phoneX: 1.24,
-    phoneY: 0.47,
-    rotation: 2,
-    dragging: true,
+    type: "cards:move",
+    cards: [{ card: "styled", x: 0.42, y: 0.61, phoneX: 1.24, phoneY: 0.47, rotation: 2, layer: 3, settled: false, dragging: true }],
   }));
   assert.deepEqual(await cardMove, {
-    type: "card:move",
-    card: "styled",
-    x: 0.42,
-    y: 0.61,
-    phoneX: 1.24,
-    phoneY: 0.47,
-    rotation: 2,
-    dragging: true,
+    type: "cards:move",
+    cards: [{
+      card: "styled",
+      x: 0.42,
+      y: 0.61,
+      phoneX: 1.24,
+      phoneY: 0.47,
+      rotation: 2,
+      layer: 3,
+      settled: false,
+      dragging: true,
+    }],
   });
 
+  const { socket: secondPhone } = await connect("phone");
   const completion = waitFor(phone, "handoff:complete");
+  const secondCompletion = waitFor(secondPhone, "handoff:complete");
   kiosk.send(JSON.stringify({ type: "handoff:complete" }));
   assert.ok((await completion).version);
+  assert.ok((await secondCompletion).version, "every connected phone receives the kiosk handoff");
 
   const { session: lateSession } = await connect("phone");
   assert.equal(lateSession.completed, undefined, "a completed handoff must not replay when a phone reconnects");

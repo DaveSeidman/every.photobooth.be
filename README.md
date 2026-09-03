@@ -11,6 +11,8 @@ Express service for the Every text-directed AI portrait booth.
 
 Only the source portrait is sent to `fal-ai/nano-banana/edit`. Reference images remain local research material and are never included in inference requests. The finished image is saved with the original camera frame notched into its upper-left corner.
 
+PostHog mode uses a separate paper-diorama prompt that translates each photographed attendee into one recognizable miniature hedgehog character. Select it by submitting `mode=posthog`.
+
 ## Local setup
 
 ```bash
@@ -25,7 +27,7 @@ Set `FAL_KEY` in `.env`. The API runs on `http://localhost:8000`.
 
 The repository's `render.yaml` creates one paid `0.5c-512mb` Node web service with a 1 GB persistent disk mounted at `/opt/render/project/src/storage`. Both uploads and completed takeaway images are written beneath that mount.
 
-The same service also accepts WebSocket connections at `/ws`. Render terminates TLS, so deployed clients connect with `wss://<service>.onrender.com/ws`; no second service or port is required. Clients reconnect after deploys or transient disconnects, and the server sends heartbeat pings to retire stale sessions.
+The same service also accepts WebSocket connections at `/ws`. Render terminates TLS, so deployed clients connect with `wss://<service>.onrender.com/ws`; no second service or port is required. A kiosk broadcasts each movement to every phone connected to its photo-specific room. Clients reconnect after deploys or transient disconnects, the server sends heartbeat pings to retire stale sessions, and empty rooms are deleted after a short reconnect grace period.
 
 1. Push the backend repository to GitHub.
 2. In Render, choose **New → Blueprint** and connect `DaveSeidman/every.photobooth.be`.

@@ -75,6 +75,13 @@ test("black and white accepts an explicit varied background color", () => {
   assert.match(prompt, /Do not add a border/);
 });
 
+test("PostHog mode creates one paper hedgehog per photographed person", () => {
+  const prompt = styleTransferPrompt({ mode: "posthog" });
+  assert.match(prompt, /exactly one hedgehog for each person/i);
+  assert.match(prompt, /colored cardboard/i);
+  assert.doesNotMatch(prompt, /Keep every original face unobstructed/i);
+});
+
 test("saved portraits include the original source as a top-left notch", async () => {
   const styled = await sharp({
     create: { width: 400, height: 300, channels: 3, background: "#245ca8" },
