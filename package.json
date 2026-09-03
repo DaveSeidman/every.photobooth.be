@@ -10,7 +10,7 @@
     "start": "node index.js",
     "test": "node --test",
     "test:every-styles": "node scripts/compare-every-styles.js",
-    "test:posthog": "node scripts/test-posthog-hedgehogs.js",
+    "test:posthog": "node scripts/generate-posthog-hedgehogs.js",
     "test:thinking": "node scripts/compare-thinking-levels.js"
   },
   "engines": {
