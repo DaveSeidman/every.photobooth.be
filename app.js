@@ -62,12 +62,19 @@ export function createApp(overrides = {}) {
       const photoId = `${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
       const mode = normalizeMode(request.body.mode);
       const style = styleTransferSpec({ mode, styleId: request.body.style });
+      const promptOverride = typeof request.body.promptOverride === "string"
+        ? request.body.promptOverride.trim()
+        : "";
+      if (promptOverride.length > 20_000) {
+        response.status(400).json({ success: false, message: "Prompt override is too long." });
+        return;
+      }
       const modelBuffer = await resizeForModel(request.file.path);
 
       const { styledUrl } = await editor.styleTransfer(
         modelBuffer,
         request.file.filename,
-        style.prompt,
+        promptOverride || style.prompt,
       );
       await saveRemoteImage({
         url: styledUrl,

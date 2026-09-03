@@ -146,3 +146,34 @@ test("submit supports a named Every style with one source image", async () => {
   assert.equal(response.body.output.styleLabel, "Weights & Measures");
   assert.equal(response.body.output.styled, response.body.output.variantA);
 });
+
+test("submit uses a supplied prompt override verbatim", async () => {
+  const onePixelPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+  let receivedPrompt;
+  const integrationApp = createApp({
+    config: {
+      ...config,
+      falKey: "",
+      directories: {
+        uploads: path.join(temporaryDirectory, "override-uploads"),
+        photos: path.join(temporaryDirectory, "override-photos"),
+      },
+    },
+    editor: {
+      async styleTransfer(_source, _filename, prompt) {
+        receivedPrompt = prompt;
+        return { styledUrl: `data:image/png;base64,${onePixelPng.toString("base64")}` };
+      },
+    },
+  });
+
+  await request(integrationApp)
+    .post("/submit")
+    .field("mode", "every")
+    .field("style", "weights-measures")
+    .field("promptOverride", "  Render this custom treatment.  ")
+    .attach("photo", onePixelPng, "portrait.png")
+    .expect(200);
+
+  assert.equal(receivedPrompt, "Render this custom treatment.");
+});
