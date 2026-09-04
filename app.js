@@ -80,7 +80,6 @@ export function createApp(overrides = {}) {
         url: styledUrl,
         outputDirectory: runtimeConfig.directories.photos,
         photoId,
-        sourceBuffer: modelBuffer,
       });
       await saveSourceImage({
         sourceBuffer: modelBuffer,

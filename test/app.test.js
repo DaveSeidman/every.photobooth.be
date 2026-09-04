@@ -82,28 +82,24 @@ test("PostHog mode creates one paper hedgehog per photographed person", () => {
   assert.doesNotMatch(prompt, /Keep every original face unobstructed/i);
 });
 
-test("saved portraits include the original source as a top-left notch", async () => {
+test("saved portraits keep the generated image free of a source-photo inset", async () => {
   const styled = await sharp({
     create: { width: 400, height: 300, channels: 3, background: "#245ca8" },
   }).jpeg().toBuffer();
-  const source = await sharp({
-    create: { width: 200, height: 160, channels: 3, background: "#d54a3c" },
-  }).jpeg().toBuffer();
-  const photoId = "notched-portrait";
+  const photoId = "clean-portrait";
   await saveRemoteImage({
     url: `data:image/jpeg;base64,${styled.toString("base64")}`,
     outputDirectory: temporaryDirectory,
     photoId,
-    sourceBuffer: source,
   });
 
   const { data, info } = await sharp(path.join(temporaryDirectory, `${photoId}.jpg`))
     .raw()
     .toBuffer({ resolveWithObject: true });
   const pixel = (x, y) => data.subarray((y * info.width + x) * info.channels, (y * info.width + x) * info.channels + 3);
-  const insetPixel = pixel(24, 24);
+  const topLeftPixel = pixel(24, 24);
   const styledPixel = pixel(300, 200);
-  assert.ok(insetPixel[0] > insetPixel[2], "the red source portrait should occupy the notch");
+  assert.ok(topLeftPixel[2] > topLeftPixel[0], "the generated portrait should remain clean at top left");
   assert.ok(styledPixel[2] > styledPixel[0], "the styled portrait should remain outside the notch");
 });
 
