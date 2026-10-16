@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import fs from "node:fs";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -7,6 +8,7 @@ import { ensureDirectories, createUploadMiddleware } from "./utils/fileUtils.js"
 import { createFalEditor } from "./utils/falUtils.js";
 import { resizeForModel, saveRemoteImage, saveSourceImage } from "./utils/imageUtils.js";
 import { normalizeMode, publicEveryStyles, publicModes, styleTransferSpec } from "./modes.js";
+import { createActivityStore } from "./utils/activity.js";
 
 export function createApp(overrides = {}) {
   const runtimeConfig = overrides.config || config;
@@ -20,6 +22,9 @@ export function createApp(overrides = {}) {
   const app = express();
 
   ensureDirectories([runtimeConfig.directories.uploads, runtimeConfig.directories.photos]);
+  const activity = createActivityStore(runtimeConfig.directories.photos, { timezone: runtimeConfig.statusTimezone });
+  const startedAt = Date.now();
+  const statusPage = (_request, response) => response.type("html").send(fs.readFileSync(new URL("./utils/status-page.html", import.meta.url), "utf8"));
   const upload = createUploadMiddleware(runtimeConfig.directories.uploads, runtimeConfig.uploadMaxBytes);
 
   app.use(cors({
@@ -35,10 +40,18 @@ export function createApp(overrides = {}) {
   app.use("/uploads", express.static(runtimeConfig.directories.uploads));
   app.use("/photos", express.static(runtimeConfig.directories.photos));
 
-  app.get("/", (_request, response) => response.json({
+  app.get("/", (request, response) => request.get("accept")?.includes("text/html") ? statusPage(request, response) : response.json({
     status: "ok",
     service: "every-photobooth-backend",
     aiConfigured: Boolean(runtimeConfig.falKey),
+  }));
+  app.get("/status", statusPage);
+  app.get("/api/status", (_request, response) => response.set("Cache-Control", "no-store").json({
+    ...activity.snapshot(),
+    status: "ok",
+    aiConfigured: Boolean(runtimeConfig.falKey),
+    uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
+    printer: { enabled: false, queued: null, printing: null, message: "No photos are being sent to a printer by this backend. Printing is not enabled, and no printer queue is connected." },
   }));
   app.get("/health", (_request, response) => response.json({ status: "ok" }));
   app.get("/config", (_request, response) => response.json({
@@ -49,6 +62,7 @@ export function createApp(overrides = {}) {
   app.get("/modes", (_request, response) => response.json({ modes: publicModes() }));
 
   app.post("/submit", upload.single("photo"), async (request, response, next) => {
+    let activePhotoId;
     try {
       if (!request.file) {
         response.status(400).json({ success: false, message: "A photo file is required." });
@@ -69,6 +83,8 @@ export function createApp(overrides = {}) {
         response.status(400).json({ success: false, message: "Prompt override is too long." });
         return;
       }
+      activity.start(photoId, style.label);
+      activePhotoId = photoId;
       const modelBuffer = await resizeForModel(request.file.path);
 
       const { styledUrl } = await editor.styleTransfer(
@@ -87,6 +103,8 @@ export function createApp(overrides = {}) {
         photoId,
       });
 
+      activity.finish(photoId, "completed");
+      activePhotoId = null;
       response.json({
         success: true,
         input: `/uploads/${request.file.filename}`,
@@ -108,6 +126,7 @@ export function createApp(overrides = {}) {
         },
       });
     } catch (error) {
+      if (activePhotoId) activity.finish(activePhotoId, "failed");
       next(error);
     }
   });

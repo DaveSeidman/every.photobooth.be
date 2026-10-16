@@ -141,6 +141,10 @@ test("submit supports a named Every style with one source image", async () => {
   assert.equal(response.body.output.styleProfile, "every-weights-measures-v3");
   assert.equal(response.body.output.styleLabel, "Weights & Measures");
   assert.equal(response.body.output.styled, response.body.output.variantA);
+  const activity = await request(integrationApp).get("/api/status").expect(200);
+  assert.equal(activity.body.completed.total, 1);
+  assert.equal(activity.body.completed.today, 1);
+  assert.equal(activity.body.processing.length, 0);
 });
 
 test("submit uses a supplied prompt override verbatim", async () => {

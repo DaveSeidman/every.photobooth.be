@@ -16,6 +16,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
 
 export const config = {
   port: numberFromEnv("PORT", 8000),
+  statusTimezone: process.env.STATUS_TIMEZONE || "America/New_York",
   falKey: process.env.FAL_KEY ?? "",
   falModel: process.env.FAL_MODEL || "fal-ai/nano-banana/edit",
   falResolution: process.env.FAL_RESOLUTION || "1K",

@@ -1,4 +1,5 @@
 import { WebSocket, WebSocketServer } from "ws";
+import { randomUUID } from "node:crypto";
 
 const PHOTO_ID_PATTERN = /^[a-zA-Z0-9-]{6,80}$/;
 const ROOM_TTL_MS = 10 * 60 * 1000;
@@ -20,13 +21,14 @@ function cardPosition(message) {
   };
 }
 
-function roomSnapshot(room) {
+function roomSnapshot(room, client) {
   const clients = [...room.clients];
   return {
     phones: clients.filter((client) => client.role === "phone").length,
     kiosks: clients.filter((client) => client.role === "kiosk").length,
     cards: room.cards,
     moved: room.moved,
+    handoff: client?.role === "phone" ? room.deliveries.get(client.clientId) || null : room.handoff || null,
   };
 }
 
@@ -62,6 +64,9 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
           styled: { x: 0.76, y: 0.62, phoneX: 2, phoneY: 0.62, rotation: 2, layer: 2, settled: false },
         },
         moved: false,
+        deliveries: new Map(),
+        transferTimers: new Set(),
+        nextTransferAt: 0,
         updatedAt: Date.now(),
       });
     }
@@ -71,6 +76,40 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
   const broadcast = (room, message) => {
     room.updatedAt = Date.now();
     room.clients.forEach((client) => send(client, message));
+  };
+
+  const schedulePhone = (room, clientId) => {
+    if (room.deliveries.has(clientId)) return;
+    const now = Date.now();
+    const startsAt = Math.max(now + 450, room.nextTransferAt);
+    const handoff = {
+      id: randomUUID(), recipientId: clientId, startsAt,
+      exitMs: 750, phoneDelayMs: 1100, phoneDurationMs: 700,
+      returnDelayMs: 1950, returnDurationMs: 450, durationMs: 2400,
+    };
+    room.deliveries.set(clientId, handoff);
+    // The next event reaches the tablet 450 ms before its animation starts.
+    // Leave that lead-in after restoration, so it cannot cancel the return early.
+    room.nextTransferAt = startsAt + handoff.durationMs + 450 + 200;
+    const dispatch = () => {
+      if (![...room.clients].some((client) => client.role === "phone" && client.clientId === clientId)) return;
+      room.handoff = handoff;
+      room.updatedAt = Date.now();
+      room.clients.forEach((client) => {
+        if (client.role === "kiosk" || client.clientId === clientId) send(client, { type: "handoff:transfer", serverTime: Date.now(), handoff });
+      });
+    };
+    const delay = startsAt - now - 450;
+    if (delay <= 0) dispatch();
+    else {
+      const timer = setTimeout(() => { room.transferTimers.delete(timer); dispatch(); }, delay);
+      room.transferTimers.add(timer);
+    }
+  };
+
+  const deleteRoom = (photoId) => {
+    rooms.get(photoId)?.transferTimers.forEach(clearTimeout);
+    rooms.delete(photoId);
   };
 
   websocketServer.on("connection", (socket) => {
@@ -97,9 +136,16 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
         if (socket.room) socket.room.clients.delete(socket);
         socket.photoId = message.photoId;
         socket.role = message.role;
+        socket.clientId = typeof message.clientId === "string" && /^[a-zA-Z0-9-]{6,100}$/.test(message.clientId) ? message.clientId : randomUUID();
         socket.room = getRoom(message.photoId);
         socket.room.clients.add(socket);
-        send(socket, { type: "session", serverTime: Date.now(), ...roomSnapshot(socket.room) });
+        const room = socket.room;
+        const presence = roomSnapshot(room);
+        if (presence.phones > 0 && presence.kiosks > 0) {
+          new Set([...room.clients].filter((client) => client.role === "phone").map((client) => client.clientId))
+            .forEach((clientId) => schedulePhone(room, clientId));
+        }
+        send(socket, { type: "session", serverTime: Date.now(), ...roomSnapshot(socket.room, socket) });
         broadcast(socket.room, { type: "presence", ...roomSnapshot(socket.room) });
         return;
       }
@@ -145,7 +191,7 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
       if (socket.room.clients.size === 0) {
         cleanupTimers.set(socket.photoId, setTimeout(() => {
           const room = rooms.get(socket.photoId);
-          if (room?.clients.size === 0) rooms.delete(socket.photoId);
+          if (room?.clients.size === 0) deleteRoom(socket.photoId);
           cleanupTimers.delete(socket.photoId);
         }, EMPTY_ROOM_GRACE_MS));
       }
@@ -164,7 +210,7 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
     const expiry = Date.now() - ROOM_TTL_MS;
     rooms.forEach((room, photoId) => {
       if (room.clients.size === 0 && room.updatedAt < expiry) {
-        rooms.delete(photoId);
+        deleteRoom(photoId);
         clearTimeout(cleanupTimers.get(photoId));
         cleanupTimers.delete(photoId);
       }
@@ -174,6 +220,7 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
   websocketServer.on("close", () => {
     clearInterval(heartbeat);
     cleanupTimers.forEach((timer) => clearTimeout(timer));
+    rooms.forEach((room) => room.transferTimers.forEach(clearTimeout));
   });
   return websocketServer;
 }

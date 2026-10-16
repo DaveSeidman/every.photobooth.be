@@ -23,6 +23,10 @@ npm run dev
 
 Set `FAL_KEY` in `.env`. The API runs on `http://localhost:8000`.
 
+Open `http://localhost:8000/` in a browser (or `/status`) for the auto-refreshing operations dashboard. `/api/status` returns the same activity as JSON; `/health` and JSON requests to `/` retain their existing responses.
+
+The dashboard shows all-time/today completed portraits, active jobs, failures, restart-interrupted jobs, AI configuration and uptime. Printing is disabled; it does not report an unconnected physical printer as idle. Counts are stored in `photos/.activity.json` under `DATA_DIR` and survive restarts and image deletion. Existing timestamp-ID portrait outputs are imported on first discovery using file modification time; source/print copies are excluded. Older failures cannot be reconstructed. Back up the activity file with your data. `STATUS_TIMEZONE` defaults to `America/New_York` for daily totals.
+
 ## Render deployment
 
 The repository's `render.yaml` creates one paid `0.5c-512mb` Node web service with a 1 GB persistent disk mounted at `/opt/render/project/src/storage`. Both uploads and completed takeaway images are written beneath that mount.
