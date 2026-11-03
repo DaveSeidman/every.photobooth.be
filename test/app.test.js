@@ -46,10 +46,8 @@ test("public config exposes labels and modes without secrets", async () => {
   assert.equal(response.body.labels.styled, "Styled Portrait");
   assert.deepEqual(response.body.modes.map((mode) => mode.id), ["every", "posthog"]);
   assert.deepEqual(response.body.everyStyles.map((style) => style.id), [
-    "weights-measures",
-    "digital-twins",
-    "future-of-work",
-    "black-white",
+    "emperor-cyan",
+    "emperor-ink",
   ]);
   assert.equal(response.body.falKey, undefined);
 });
@@ -64,15 +62,16 @@ test("only Every and PostHog modes are available", async () => {
   assert.deepEqual(modes.body.modes.map((mode) => mode.id), ["every", "posthog"]);
 });
 
-test("black and white accepts an explicit varied background color", () => {
-  const prompt = styleTransferPrompt({
-    mode: "every",
-    styleId: "black-white",
-    palette: "warm coral",
-  });
-  assert.match(prompt, /exactly this assigned color: warm coral/);
-  assert.match(prompt, /dense stippling, directional hatching, crosshatching/);
-  assert.match(prompt, /Do not add a border/);
+test("both emperor prompts preserve the group and cyan has the supplied temple direction", () => {
+  for (const styleId of ["emperor-cyan", "emperor-ink"]) {
+    const prompt = styleTransferPrompt({ mode: "every", styleId });
+    assert.match(prompt, /distinct Greco-Roman emperor/);
+    assert.match(prompt, /Do not add, remove, duplicate, merge, or obscure anyone/);
+    assert.match(prompt, /sculptural marble body/);
+    assert.match(prompt, /Do not add a border/);
+    assert.doesNotMatch(prompt, /rulers, measuring tapes|android twin|headsets/);
+  }
+  assert.match(styleTransferPrompt({ mode: "every", styleId: "emperor-cyan" }), /classical temple in vivid cyan/);
 });
 
 test("PostHog mode creates one paper hedgehog per photographed person", () => {
@@ -126,20 +125,18 @@ test("submit supports a named Every style with one source image", async () => {
   const response = await request(integrationApp)
     .post("/submit")
     .field("mode", "every")
-    .field("style", "weights-measures")
+    .field("style", "emperor-cyan")
     .attach("photo", onePixelPng, "portrait.png")
     .expect(200);
 
   assert.match(receivedPrompt, /IMAGE 1 is the only source photograph/);
-  assert.match(receivedPrompt, /LOCK THE SOURCE COMPOSITION/);
-  assert.match(receivedPrompt, /rulers, measuring tapes, protractors/);
-  assert.match(receivedPrompt, /Vitruvian circles/);
-  assert.match(receivedPrompt, /Tiny indecipherable drafting annotations/);
+  assert.match(receivedPrompt, /distinct Greco-Roman emperor/);
+  assert.match(receivedPrompt, /classical temple in vivid cyan/);
   assert.doesNotMatch(receivedPrompt, /IMAGE 2/);
   assert.equal(response.body.output.mode, "every");
   assert.match(receivedPrompt, /EDGE-TO-EDGE ARTWORK/);
-  assert.equal(response.body.output.styleProfile, "every-weights-measures-v3");
-  assert.equal(response.body.output.styleLabel, "Weights & Measures");
+  assert.equal(response.body.output.styleProfile, "every-emperor-cyan-v3");
+  assert.equal(response.body.output.styleLabel, "Imperial Cyan");
   assert.equal(response.body.output.styled, response.body.output.variantA);
   const activity = await request(integrationApp).get("/api/status").expect(200);
   assert.equal(activity.body.completed.total, 1);
@@ -170,7 +167,7 @@ test("submit uses a supplied prompt override verbatim", async () => {
   await request(integrationApp)
     .post("/submit")
     .field("mode", "every")
-    .field("style", "weights-measures")
+    .field("style", "emperor-cyan")
     .field("promptOverride", "  Render this custom treatment.  ")
     .attach("photo", onePixelPng, "portrait.png")
     .expect(200);

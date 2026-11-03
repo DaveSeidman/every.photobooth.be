@@ -20,18 +20,18 @@ async function setup(t, editor, options = {}) {
   app = createApp({ config: { ...config, falKey: "", fallback: { enabled: true, normalDurationMs: options.normalMs || 17000 }, directories: { uploads: path.join(directory, "uploads"), photos: path.join(directory, "photos") }, print: { prepareStrips: true, autoSubmit: true, serverUrl: "http://print.test/print", conferenceDate: "2026-11-05", location: "in Brooklyn" } }, editor, uploadPrint: async () => { printCalls++; return { jobId: "mock-printer-job", dryRun: true }; } });
   return { app, directory, printCalls: () => printCalls };
 }
-const submit = (app) => request(app).post("/submit").field("mode", "every").field("style", "black-white").attach("photo", original, "original.jpg");
+const submit = (app) => request(app).post("/submit").field("mode", "every").field("style", "emperor-cyan").attach("photo", original, "original.jpg");
 
 test("local filters keep the source dimensions and produce distinct valid portraits", async () => {
   const hashes = new Set();
-  for (const id of ["black-white", "weights-measures", "digital-twins", "future-of-work"]) {
+  for (const id of ["emperor-cyan", "emperor-ink"]) {
     const output = await createLocalPortrait(original, id);
     const meta = await sharp(output.buffer).metadata();
     assert.equal(output.generationMode, "local");
     assert.equal(meta.width, 120); assert.equal(meta.height, 120);
     hashes.add(output.buffer.toString("base64"));
   }
-  assert.equal(hashes.size, 4);
+  assert.equal(hashes.size, 2);
 });
 
 test("provider failure immediately produces two local portraits and one printable sheet", async (t) => {
@@ -117,7 +117,7 @@ for (const simulation of ["offline", "error", "timeout"]) {
       upload() { assert.fail("Simulation must not upload to Fal"); },
       edit() { assert.fail("Simulation must not call the model"); },
     }, { normalMs: 20 });
-    const response = await request(app).post("/submit").field("mode", "every").field("style", "black-white").field("failureSimulation", simulation).attach("photo", original, "original.jpg").expect(200);
+    const response = await request(app).post("/submit").field("mode", "every").field("style", "emperor-cyan").field("failureSimulation", simulation).attach("photo", original, "original.jpg").expect(200);
     assert.equal(response.body.output.generationMode, "local");
     assert.equal(response.body.output.fallbackReason, simulation === "timeout" ? "timeout" : "error");
     await app.locals.strips.whenIdle();

@@ -1,6 +1,8 @@
 import sharp from "sharp";
 
 const filters = {
+  "emperor-cyan": { label: "Cyan Ink", low: [18, 18, 18], high: [156, 229, 245], screen: true },
+  "emperor-ink": { label: "Ink & Paper", low: [18, 18, 18], high: [253, 250, 247], screen: true },
   "black-white": { label: "Ink & Paper", low: [18, 18, 18], high: [253, 250, 247], screen: true },
   "weights-measures": { label: "Blueprint", low: [14, 35, 66], high: [156, 229, 245], grid: true },
   "digital-twins": { label: "Coral Duotone", low: [28, 20, 38], high: [255, 119, 101], posterize: true },

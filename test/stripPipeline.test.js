@@ -20,7 +20,7 @@ async function setup(t, editor, print = {}, uploadPrint) {
   app = createApp({ config: { ...config, fallback: { ...config.fallback, enabled: false }, print: { prepareStrips: true, ...print }, falKey: "", directories: { uploads: path.join(directory, "uploads"), photos: path.join(directory, "photos") } }, editor, uploadPrint });
   return { app, directory };
 }
-const submit = (app) => request(app).post("/submit").field("mode", "every").field("style", "black-white").attach("photo", original, "original.png");
+const submit = (app) => request(app).post("/submit").field("mode", "every").field("style", "emperor-cyan").attach("photo", original, "original.png");
 
 test("both edits start after one upload, selected response does not wait for alternate, and sheet waits for both", async (t) => {
   let release, releaseSelected, bothStarted;
@@ -50,6 +50,7 @@ test("both edits start after one upload, selected response does not wait for alt
     assert.equal(response.body.output.printStatus, "preparing-strip");
     const pending = await request(app).get(`/photos/${id}/strip`).expect(200);
     assert.equal(pending.body.status, "generating");
+    assert.equal(pending.body.alternateStyle.id, "emperor-ink");
     assert.notEqual(styleTransferSpec({ mode: "every", styleId: pending.body.alternateStyle.id }).id, response.body.output.styleProfile);
     assert.match(extraPrompt, /IMAGE 1 is the only source photograph/);
   } finally { release(); }
@@ -124,7 +125,7 @@ test("model input is 512 pixels while the source saved for printing retains came
     async upload(buffer) { inputWidth = (await sharp(buffer).metadata()).width; return "https://example.test/original"; },
     async edit(_source, _prompt, context) { return dataUrl(context.role === "selected" ? selected : alternate); },
   });
-  const response = await request(app).post("/submit").field("mode", "every").field("style", "black-white").attach("photo", fullResolution, "original.jpg").expect(200);
+  const response = await request(app).post("/submit").field("mode", "every").field("style", "emperor-cyan").attach("photo", fullResolution, "original.jpg").expect(200);
   await app.locals.strips.whenIdle();
   assert.equal(inputWidth, 512);
   const metadata = await sharp(path.join(directory, "photos", `${response.body.output.photoId}-source.jpg`)).metadata();

@@ -56,7 +56,7 @@ Animation is disabled. Classic strip preparation and automatic print submission 
 
 ## Local print bridge
 
-A separate service now lives in `../every-photobooth-print-server`, based on last year's War is Peace port-9000 printer bridge. See its README for dry-run setup, DNP/CUPS configuration, job status, and reprints. `utils/printUtils.js` contains the compatible upload helper, including optional bearer authentication and idempotency keys. The Every strip layout is implemented: original + selected style + a randomly chosen different style, with Thesis styling, logo, conference date, and “in Brooklyn”. The full strip is repeated side by side. Automatic printing remains disabled until the date and on-site printer setup are confirmed.
+A separate service now lives in `../every-photobooth-print-server`, based on last year's War is Peace port-9000 printer bridge. See its README for dry-run setup, DNP/CUPS configuration, job status, and reprints. `utils/printUtils.js` contains the compatible upload helper, including optional bearer authentication and idempotency keys. The Every strip layout is implemented: original + selected emperor style + the other emperor style, with Thesis styling, logo, conference date, and “in Brooklyn”. The full strip is repeated side by side. Automatic printing remains disabled until the date and on-site printer setup are confirmed.
 
 ### Classic strip workflow
 
@@ -86,7 +86,7 @@ Classic strip rows show the original camera thumbnail only. Every dashboard refr
 
 ### Automatic local fallback
 
-The local backend replaces a failed or slow AI treatment with a classic photo filter, independently for the selected and alternate portraits. The available filters are Ink & Paper, Blueprint, Coral Duotone, and Electric Halftone, mapped to the four style choices. Results and print captions identify these as **Classic**. A successful AI treatment is retained when only the other treatment needs fallback.
+The local backend replaces a failed or slow AI treatment with a classic photo filter, independently for the selected and alternate portraits. The two emperor choices map to Cyan Ink and Ink & Paper local filters. These filters preserve the source photograph and do not invent marble bodies or temples. Results and print captions identify these as **Classic**. A successful AI treatment is retained when only the other treatment needs fallback.
 
 `LOCAL_FALLBACK_ENABLED=true` is the default. The initial normal AI duration is `AI_NORMAL_DURATION_MS=17000`, giving a **34-second** fallback deadline. After at least three successful AI treatments, the deadline becomes twice the median of the last 20 successful treatment durations (upload, edit, image download and decode). Timing samples persist in `photos/.ai-latency.json`; failures and fallback rendering do not train that baseline. `/config` and `/api/status` expose the current policy under `generation`.
 
@@ -97,3 +97,5 @@ The browser refreshes the current policy before submission and leaves another 15
 This fallback runs **on the event Mac** and needs no AI provider or internet connection. The iPad must still reach the local frontend/backend and printer computer over the local network. It does not provide a browser-only fallback if the Mac/backend itself is unreachable, or make cloud-hosted app endpoints reachable without internet. Phone downloads via cloud-hosted links also still need an available delivery path.
 
 The preview `docs/classic-fallback-preview-print.jpg` shows a fully local strip. Provider failure and stalled-request tests use isolated mock editors and printer stubs; they do not spend AI credits or physically print.
+
+The two guest choices are **Imperial Cyan** and **Imperial Ink**. Both edits run in parallel, and the strip always includes both. The supplied Imperial Ink prompt currently ends at “deep shadows…”; its remaining text is still needed.

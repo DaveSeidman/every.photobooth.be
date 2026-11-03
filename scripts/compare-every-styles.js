@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import sharp from "sharp";
 import { createFalEditor } from "../utils/falUtils.js";
 import {
-  blackWhiteBackgroundColors,
   everyStyleDefinitions,
   styleTransferPrompt,
 } from "../modes.js";
@@ -57,10 +56,7 @@ for (const [imageIndex, inputName] of inputNames.entries()) {
   const row = { inputName, outputs: {} };
 
   for (const style of everyStyleDefinitions) {
-    const palette = style.id === "black-white"
-      ? blackWhiteBackgroundColors[imageIndex % blackWhiteBackgroundColors.length]
-      : undefined;
-    const prompt = styleTransferPrompt({ mode: "every", styleId: style.id, palette });
+    const prompt = styleTransferPrompt({ mode: "every", styleId: style.id });
     const startedAt = performance.now();
     const outputUrl = await editor.edit(uploadedUrl, prompt);
     const response = await fetch(outputUrl);

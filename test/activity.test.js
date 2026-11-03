@@ -42,7 +42,7 @@ test("status tracks in-flight generation and failure; printer is explicitly disa
     async styleTransfer() { entered(); await gate; throw new Error("Test generator unavailable"); },
   } });
   const image = await sharp({ create: { width: 2, height: 2, channels: 3, background: "white" } }).png().toBuffer();
-  const pending = request(app).post("/submit").field("style", "digital-twins").attach("photo", image, "photo.png").then((response) => response);
+  const pending = request(app).post("/submit").field("style", "emperor-ink").attach("photo", image, "photo.png").then((response) => response);
   await started;
   const active = await request(app).get("/api/status").expect(200);
   assert.equal(active.body.processing.length, 1);
