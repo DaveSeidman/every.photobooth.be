@@ -99,3 +99,5 @@ This fallback runs **on the event Mac** and needs no AI provider or internet con
 The preview `docs/classic-fallback-preview-print.jpg` shows a fully local strip. Provider failure and stalled-request tests use isolated mock editors and printer stubs; they do not spend AI credits or physically print.
 
 The two guest choices are **Imperial Cyan** and **Imperial Ink**. Both edits run in parallel, and the strip always includes both. The supplied Imperial Ink prompt currently ends at “deep shadows…”; its remaining text is still needed.
+
+The WebSocket protocol accepts `takeaway:interaction` events from joined phone clients and relays bounded gesture coordinates and share lifecycle actions only to kiosks in the same photo room. A single gesture owns the tablet mirror until its return animation finishes (2.4 seconds after detach, 650 ms after cancel; 8-second timeout while held). Other phones continue saving/sharing independently; their overlapping gestures cannot redirect the tablet. Closing the owning connection during a pull sends a cancellation. These events do not generate images or print.

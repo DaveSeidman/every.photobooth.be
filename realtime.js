@@ -152,6 +152,36 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
 
       if (!socket.room) return;
 
+      if (message.type === "takeaway:interaction" && socket.role === "phone") {
+        const actions = ["grab", "pull", "cancel", "detach", "share-start", "share-complete", "download-started", "share-cancelled", "share-error"];
+        if (!actions.includes(message.action)) return;
+        const now = Date.now();
+        if (message.action === "pull" && now - (socket.lastTakeawayPull || 0) < 50) return;
+        if (message.action === "pull") socket.lastTakeawayPull = now;
+        const gestureId = typeof message.gestureId === "string" && /^[a-zA-Z0-9-]{1,100}$/.test(message.gestureId) ? message.gestureId : "share";
+        // Hold one gesture's ownership through its return animation. Other
+        // phones continue locally, but cannot redirect this tablet mid-tear.
+        const room = socket.room;
+        if (room.takeawayOwner?.expiresAt <= now) room.takeawayOwner = null;
+        const owner = room.takeawayOwner;
+        if (owner && (owner.socket !== socket || owner.gestureId !== gestureId)) return;
+        if (!owner && ["pull", "cancel"].includes(message.action)) return;
+        if (["grab", "detach"].includes(message.action) || owner) {
+          const hold = message.action === "cancel" ? 650 : message.action === "detach" ? 2400 : ["grab", "pull"].includes(message.action) ? 8000 : Math.max(0, (owner?.expiresAt || now) - now);
+          room.takeawayOwner = {socket, gestureId, expiresAt: now + hold};
+        }
+        const interaction = {
+          type: "takeaway:interaction", action: message.action, gestureId, clientId: socket.clientId, serverTime: now,
+          progress: clamp(message.progress, 0, 1), x: clamp(message.x, -1, 1), y: clamp(message.y, 0, 1),
+          angle: clamp(message.angle, -60, 60), origin: message.origin === 100 ? 100 : 0,
+          grabX: clamp(message.grabX, 0, 1), grabY: clamp(message.grabY, 0, 1),
+          method: message.method === "pull" ? "pull" : "tap",
+        };
+        socket.takeawayGesture = ["grab", "pull"].includes(message.action) ? interaction : null;
+        socket.room.clients.forEach((client) => { if (client.role === "kiosk") send(client, interaction); });
+        return;
+      }
+
       if (message.type === "cards:move" && socket.role === "kiosk" && Array.isArray(message.cards)) {
         const moves = message.cards.slice(0, 2).filter(validMove).map((move) => {
           socket.room.cards[move.card] = cardPosition(move);
@@ -187,6 +217,12 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
       clearTimeout(joinTimeout);
       if (!socket.room) return;
       socket.room.clients.delete(socket);
+      if (socket.takeawayGesture) {
+        if (socket.room.takeawayOwner?.socket === socket) socket.room.takeawayOwner.expiresAt = Date.now() + 650;
+        socket.room.clients.forEach((client) => {
+        if (client.role === "kiosk") send(client, {...socket.takeawayGesture, action:"cancel", serverTime:Date.now()});
+        });
+      }
       broadcast(socket.room, { type: "presence", ...roomSnapshot(socket.room) });
       if (socket.room.clients.size === 0) {
         cleanupTimers.set(socket.photoId, setTimeout(() => {

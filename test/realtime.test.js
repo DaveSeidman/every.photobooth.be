@@ -121,3 +121,50 @@ test("finished transfers survive reconnect without a fresh animation timestamp",
   const { session: rejoined } = await connect("phone", photoId, "stable-phone-client");
   assert.deepEqual(rejoined.handoff, first.handoff);
 });
+
+test("phone tear movement is bounded and relayed only within its tablet room", async () => {
+  const photoId="takeaway-echo-123";
+  const {socket:kiosk}=await connect("kiosk",photoId);
+  const {socket:other}=await connect("kiosk","unrelated-takeaway-123");
+  let crossedRooms=0;
+  other.on("message",raw=>{if(JSON.parse(raw).type==="takeaway:interaction")crossedRooms++;});
+  const {socket:phone}=await connect("phone",photoId,"phone-echo-123");
+  const grabbed=waitFor(kiosk,"takeaway:interaction");
+  phone.send(JSON.stringify({type:"takeaway:interaction",action:"grab",gestureId:"gesture-echo-123",grabX:.9}));
+  assert.equal((await grabbed).action,"grab");
+  const moved=waitFor(kiosk,"takeaway:interaction");
+  phone.send(JSON.stringify({type:"takeaway:interaction",action:"pull",gestureId:"gesture-echo-123",x:500,y:500,angle:500,progress:500,origin:100}));
+  const event=await moved;
+  assert.equal(event.x,1);assert.equal(event.y,1);assert.equal(event.angle,60);assert.equal(event.progress,1);
+  assert.equal(event.origin,100);assert.equal(event.clientId,"phone-echo-123");
+  const cancelled=waitFor(kiosk,"takeaway:interaction");
+  phone.close();
+  assert.equal((await cancelled).action,"cancel");
+  assert.equal(crossedRooms,0);
+});
+
+test("simultaneous phones cannot take over the tablet during an owned tear", async () => {
+  const photoId="takeaway-multiple-123";
+  const {socket:kiosk}=await connect("kiosk",photoId);
+  const {socket:first}=await connect("phone",photoId,"phone-first-123");
+  const {socket:second}=await connect("phone",photoId,"phone-second-123");
+  const received=[];
+  kiosk.on("message",raw=>{const event=JSON.parse(raw);if(event.type==="takeaway:interaction")received.push(event);});
+  const grab=waitFor(kiosk,"takeaway:interaction");
+  first.send(JSON.stringify({type:"takeaway:interaction",action:"grab",gestureId:"first-gesture-123"}));
+  await grab;
+  second.send(JSON.stringify({type:"takeaway:interaction",action:"grab",gestureId:"second-gesture-123"}));
+  second.send(JSON.stringify({type:"takeaway:interaction",action:"detach",gestureId:"second-gesture-123"}));
+  second.send(JSON.stringify({type:"takeaway:interaction",action:"share-complete",gestureId:"second-gesture-123"}));
+  const moved=waitFor(kiosk,"takeaway:interaction");
+  first.send(JSON.stringify({type:"takeaway:interaction",action:"pull",gestureId:"first-gesture-123",progress:.5}));
+  assert.equal((await moved).clientId,"phone-first-123");
+  await new Promise(resolve=>setTimeout(resolve,100));
+  assert.ok(received.every(event=>event.clientId==="phone-first-123"));
+  const detached=waitFor(kiosk,"takeaway:interaction");
+  first.send(JSON.stringify({type:"takeaway:interaction",action:"detach",gestureId:"first-gesture-123"}));
+  await detached;
+  second.send(JSON.stringify({type:"takeaway:interaction",action:"grab",gestureId:"third-gesture-123"}));
+  await new Promise(resolve=>setTimeout(resolve,100));
+  assert.ok(received.every(event=>event.clientId==="phone-first-123"),"ownership lasts through the tablet's return animation");
+});
