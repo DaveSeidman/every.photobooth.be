@@ -68,7 +68,6 @@ for (const [imageIndex, inputName] of inputNames.entries()) {
       .toFile(path.join(outputDirectory, outputName));
     row.outputs[style.id] = {
       outputName,
-      palette,
       prompt,
       seconds: (performance.now() - startedAt) / 1000,
     };
