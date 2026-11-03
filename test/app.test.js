@@ -17,7 +17,7 @@ before(async () => {
   temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "every-photobooth-"));
   app = createApp({
     config: {
-      ...config,
+      ...config, fallback: { ...config.fallback, enabled: false }, print: { ...config.print, prepareStrips: false, autoSubmit: false },
       falKey: "",
       directories: {
         uploads: path.join(temporaryDirectory, "uploads"),
@@ -108,7 +108,7 @@ test("submit supports a named Every style with one source image", async () => {
   let receivedPrompt;
   const integrationApp = createApp({
     config: {
-      ...config,
+      ...config, fallback: { ...config.fallback, enabled: false }, print: { ...config.print, prepareStrips: false, autoSubmit: false },
       falKey: "",
       directories: {
         uploads: path.join(temporaryDirectory, "integration-uploads"),
@@ -152,7 +152,7 @@ test("submit uses a supplied prompt override verbatim", async () => {
   let receivedPrompt;
   const integrationApp = createApp({
     config: {
-      ...config,
+      ...config, fallback: { ...config.fallback, enabled: false }, print: { ...config.print, prepareStrips: false, autoSubmit: false },
       falKey: "",
       directories: {
         uploads: path.join(temporaryDirectory, "override-uploads"),

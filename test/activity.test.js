@@ -38,7 +38,7 @@ test("status tracks in-flight generation and failure; printer is explicitly disa
   let release, entered;
   const started = new Promise((resolve) => { entered = resolve; });
   const gate = new Promise((resolve) => { release = resolve; });
-  const app = createApp({ config: { ...config, directories: { uploads: path.join(dir, "uploads"), photos: path.join(dir, "photos") } }, editor: {
+  const app = createApp({ config: { ...config, fallback: { ...config.fallback, enabled: false }, print: { ...config.print, prepareStrips: false, autoSubmit: false }, directories: { uploads: path.join(dir, "uploads"), photos: path.join(dir, "photos") } }, editor: {
     async styleTransfer() { entered(); await gate; throw new Error("Test generator unavailable"); },
   } });
   const image = await sharp({ create: { width: 2, height: 2, channels: 3, background: "white" } }).png().toBuffer();
@@ -57,4 +57,42 @@ test("status tracks in-flight generation and failure; printer is explicitly disa
   await request(app).get("/").set("Accept", "text/html").expect("Content-Type", /html/).expect(200);
   const json = await request(app).get("/").expect(200);
   assert.equal(json.body.status, "ok");
+});
+
+test("completed counter resets persist without deleting photos or historical jobs", (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "booth-counter-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const photo = path.join(dir, "1792100000000-abc123.jpg");
+  fs.writeFileSync(photo, "saved photo");
+  const store = createActivityStore(dir);
+  store.start("in-flight", "Digital Twins");
+  const reset = store.resetCompletedTotal();
+  assert.equal(reset.completed.total, 0);
+  assert.ok(reset.completedResetAt);
+  assert.ok(fs.existsSync(photo));
+  assert.equal(reset.recent.length, 2);
+  assert.equal(reset.processing.length, 1);
+  store.finish("in-flight", "completed");
+  assert.equal(store.snapshot().completed.total, 1);
+  const restarted = createActivityStore(dir).snapshot();
+  assert.equal(restarted.completed.total, 1);
+  assert.equal(restarted.completedResetAt, reset.completedResetAt);
+  assert.equal(restarted.recent.length, 2);
+});
+
+test("reset endpoint changes only the completed counter", async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "booth-reset-api-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const photos = path.join(dir, "photos"); fs.mkdirSync(photos);
+  fs.writeFileSync(path.join(photos, "1792100000000-abc123.jpg"), "saved photo");
+  const app = createApp({ config: { ...config, fallback: { ...config.fallback, enabled: false }, print: { prepareStrips: false, autoSubmit: false }, directories: { uploads: path.join(dir, "uploads"), photos } } });
+  const before = await request(app).get("/api/status").expect(200);
+  assert.equal(before.body.completed.total, 1);
+  await request(app).post("/api/status/completed/reset").send({}).expect(400);
+  const reset = await request(app).post("/api/status/completed/reset").send({ reset: true }).expect(200);
+  assert.equal(reset.body.completed.total, 0);
+  assert.equal(reset.body.recent.length, before.body.recent.length);
+  assert.equal(reset.body.failed.total, before.body.failed.total);
+  const after = await request(app).get("/api/status").expect(200);
+  assert.equal(after.body.completed.total, 0);
 });

@@ -4,35 +4,61 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Every / Booth status</title>
 <style>
-  :root{font-family:Arial,sans-serif;color:#181818;background:#f6f4ee}*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:48px 28px}header{display:flex;justify-content:space-between;align-items:start;gap:20px;margin-bottom:44px}.eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:#62625d}h1{font-size:clamp(36px,6vw,64px);letter-spacing:-.06em;font-weight:500;margin:12px 0}h2{font-size:20px;font-weight:500;margin:0 0 20px}p{line-height:1.6}.live{color:#246942}.badge{display:inline-block;border:1px solid #bcbcb4;padding:9px 12px;border-radius:4px;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card,section{border:1px solid #d6d5cc;background:#fffef9;padding:24px}.card p{margin:0;color:#62625d;font-size:13px}.value{display:block;font-size:56px;letter-spacing:-.06em;margin:18px 0 12px}.note{color:#62625d;font-size:13px}section{margin-top:24px}.details{display:flex;gap:12px;flex-wrap:wrap}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:16px 8px;border-bottom:1px solid #e4e3dc}th{font-weight:400;color:#62625d;font-size:12px}td:first-child{font-family:monospace}.scroll{overflow:auto}#connection{font-size:13px;text-align:right}#connection[data-stale=true]{color:#a33123}footer{margin-top:24px;color:#62625d;font-size:12px}@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}header{display:block}#connection{text-align:left}.card{padding:18px}}@media(max-width:400px){.grid{grid-template-columns:1fr}}
+  :root{font-family:Arial,sans-serif;color:#181818;background:#f6f4ee}*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:48px 28px}header{display:flex;justify-content:space-between;align-items:start;gap:20px;margin-bottom:44px}.eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:#62625d}h1{font-size:clamp(36px,6vw,64px);letter-spacing:-.06em;font-weight:500;margin:12px 0}h2{font-size:20px;font-weight:500;margin:0 0 20px}p{line-height:1.6}.live{color:#246942}.badge{display:inline-block;border:1px solid #bcbcb4;padding:9px 12px;border-radius:4px;font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card,section{border:1px solid #d6d5cc;background:#fffef9;padding:24px}.card p{margin:0;color:#62625d;font-size:13px}.value{display:block;font-size:56px;letter-spacing:-.06em;margin:18px 0 12px}.note{color:#62625d;font-size:13px}section{margin-top:24px}.details{display:flex;gap:12px;flex-wrap:wrap}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:16px 8px;border-bottom:1px solid #e4e3dc}th{font-weight:400;color:#62625d;font-size:12px}td:first-child{font-family:monospace}.scroll{overflow:auto}#connection{font-size:13px;text-align:right}#connection[data-stale=true]{color:#a33123}footer{margin-top:24px;color:#62625d;font-size:12px}@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}header{display:block}#connection{text-align:left}.card{padding:18px}}@media(max-width:400px){.grid{grid-template-columns:1fr}}
+  #reset-total{margin-top:16px;padding:8px 10px;border:1px solid #bcbcb4;border-radius:4px;background:transparent;color:inherit;cursor:pointer;font:inherit;font-size:12px}#reset-total:disabled{opacity:.5;cursor:wait}#reset-error{color:#a33123;margin-top:8px}
 </style>
 <main>
   <div style="position:fixed;top:8px;right:8px;z-index:100;padding:6px 9px;background:#000;color:#fff;font:10px/1.3 monospace;pointer-events:none">D01 / BACKEND STATUS</div>
-  <header><div><div class="eyebrow">Every / Photobooth operations</div><h1>How’s the booth doing?</h1><div class="note" id="day">Loading activity…</div></div><p id="connection" role="status" aria-live="polite">Connecting…</p></header>
+  <header><div><div class="eyebrow">Every / Photobooth operations</div><h1>Photobooth status</h1><div class="note" id="day">Loading activity…</div></div><p id="connection" role="status" aria-live="polite">Connecting…</p></header>
   <div class="grid">
-    <div class="card"><p>Photos completed / all time</p><strong class="value" id="total">—</strong><p>One generated portrait per job</p></div>
-    <div class="card"><p>Photos completed / today</p><strong class="value" id="today">—</strong><p id="timezone">—</p></div>
+    <div class="card"><p>Photos completed</p><strong class="value" id="total">—</strong><p id="count-note">All-time total</p><button type="button" id="reset-total">Reset completed total</button><p id="reset-error" role="alert"></p></div>
     <div class="card"><p>Processing right now</p><strong class="value" id="processing">—</strong><p id="active">Waiting for status</p></div>
     <div class="card"><p>Failed / today</p><strong class="value" id="failed">—</strong><p id="failures">—</p></div>
   </div>
-  <section><h2>Printer</h2><span class="badge" id="printer">Checking…</span><p id="print-note" class="note"></p></section>
+  <section><h2>Classic photo strips</h2><p class="note">Original + chosen treatment + a different treatment. Two matching 2×6 strips per sheet.</p><div class="scroll"><table><thead><tr><th>Original photo</th><th>Second treatment</th><th>Status</th><th>Print proof</th></tr></thead><tbody id="strip-jobs"></tbody></table></div></section>
   <section><h2>Service</h2><div class="details"><span class="badge" id="ai">AI: checking…</span><span class="badge" id="uptime">Uptime: —</span><span class="badge" id="interrupted">Interrupted: —</span></div></section>
   <section><h2>Recent activity</h2><div class="scroll"><table><thead><tr><th>Photo ID</th><th>Treatment</th><th>Status</th><th>Started / completed</th></tr></thead><tbody id="jobs"></tbody></table></div><p class="note">Earlier portraits are imported from saved outputs. Historical failures were not tracked before this dashboard.</p></section>
   <footer>Refreshes every 3 seconds. Counts persist across restarts. Source photos and print copies do not count as additional portraits.</footer>
 </main>
 <script>
   const set=(id,value)=>document.getElementById(id).textContent=value;
+  function updateCount(data){
+    set('total',data.completed.total);
+    set('count-note',data.completedResetAt?`Since reset ${new Date(data.completedResetAt).toLocaleString(undefined,{timeZone:data.timezone})}`:'All-time total');
+  }
+  document.getElementById('reset-total').addEventListener('click',async()=>{
+    const button=document.getElementById('reset-total');button.disabled=true;set('reset-error','');
+    try{
+      const response=await fetch('/api/status/completed/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reset:true})});
+      if(!response.ok)throw new Error('Could not reset the completed total. Please try again.');
+      updateCount(await response.json());
+    }catch(error){set('reset-error',error.message);}
+    finally{button.disabled=false;}
+  });
   async function refresh(){
     try{
       const response=await fetch('/api/status',{cache:'no-store'});
       if(!response.ok)throw new Error('Status unavailable');
       const data=await response.json();
-      set('total',data.completed.total);set('today',data.completed.today);set('timezone',data.timezone);
+      updateCount(data);
       set('processing',data.processing.length);set('active',data.processing.length?'Generating portraits':'Ready for the next portrait');
       set('failed',data.failed.today);set('failures',`${data.failed.total} failed since tracking began`);
       set('day',`Activity for ${data.today} · ${data.timezone}`);
-      set('printer','Printing disabled');set('print-note',data.printer.message);
-      set('ai',data.aiConfigured?'AI generation configured':'AI generation not configured');
+      const stripRows=(data.strips?.recent||[]).map(job=>{
+        const row=document.createElement('tr');
+        const photoCell=document.createElement('td');
+        const original=document.createElement('a');original.href=`/photos/${job.photoId}-source.jpg`;original.target='_blank';original.rel='noopener';original.title=job.photoId;
+        const thumbnail=document.createElement('img');thumbnail.src=original.href;thumbnail.alt='Original portrait';thumbnail.loading='lazy';thumbnail.width=64;thumbnail.height=64;thumbnail.style.cssText='display:block;object-fit:cover;border-radius:3px';original.append(thumbnail);photoCell.append(original);row.append(photoCell);
+        const labels={'print-queued':'Queued','printing':'Printing','printed':'Printed','print-held':'Held','print-stopped':'Stopped','print-cancelled':'Cancelled','print-failed':'Print failed','print-interrupted':'Interrupted'};
+        for(const value of [job.alternateStyle.label,job.printTrackingError?'Print status unavailable':labels[job.status]||job.status]){const cell=document.createElement('td');cell.textContent=value;row.append(cell);}
+        const cell=document.createElement('td');
+        if(job.sheetUrl){const link=document.createElement('a');link.href=job.sheetUrl;link.textContent='View sheet';link.target='_blank';link.rel='noopener';cell.append(link);}
+        else cell.textContent=job.error||'Preparing…';
+        row.append(cell);return row;
+      });
+      if(!stripRows.length){const row=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=4;cell.textContent='No photo strips prepared yet.';row.append(cell);stripRows.push(row);}
+      document.getElementById('strip-jobs').replaceChildren(...stripRows);
+      set('ai',data.aiConfigured?(data.generation?.localFallbackEnabled?'AI + classic fallback ready':'AI generation configured'):(data.generation?.localFallbackEnabled?'Classic photo mode ready':'AI generation not configured'));
       set('uptime',`Uptime: ${Math.floor(data.uptimeSeconds/3600)}h ${Math.floor(data.uptimeSeconds/60)%60}m`);
       set('interrupted',`Interrupted by restart: ${data.interrupted}`);
       const rows=data.recent.map(job=>{

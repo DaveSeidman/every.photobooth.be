@@ -3,6 +3,8 @@ import path from "node:path";
 
 export function createActivityStore(photoDirectory, { timezone = "America/New_York", now = () => new Date() } = {}) {
   const file = path.join(photoDirectory, ".activity.json");
+  const counterFile = path.join(photoDirectory, ".activity-counter.json");
+  let counter = fs.existsSync(counterFile) ? JSON.parse(fs.readFileSync(counterFile, "utf8")) : { completedOffset: 0, resetAt: null };
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" });
   const jobs = new Map(fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")).map((job) => [job.id, job]) : []);
   const persist = () => {
@@ -31,9 +33,16 @@ export function createActivityStore(photoDirectory, { timezone = "America/New_Yo
       jobs.set(id, { id, style, status: "processing", startedAt: now().toISOString() });
       persist();
     },
-    finish(id, status) {
-      Object.assign(jobs.get(id), { status, finishedAt: now().toISOString() });
+    finish(id, status, details = {}) {
+      Object.assign(jobs.get(id), { ...details, status, finishedAt: now().toISOString() });
       persist();
+    },
+    resetCompletedTotal() {
+      const next = { completedOffset: [...jobs.values()].filter((job) => job.status === "completed").length, resetAt: now().toISOString() };
+      fs.writeFileSync(`${counterFile}.tmp`, JSON.stringify(next));
+      fs.renameSync(`${counterFile}.tmp`, counterFile);
+      counter = next;
+      return this.snapshot();
     },
     snapshot() {
       const current = now();
@@ -42,7 +51,8 @@ export function createActivityStore(photoDirectory, { timezone = "America/New_Yo
       const count = (status, daily = false) => all.filter((job) => job.status === status && (!daily || day.format(new Date(job.finishedAt)) === today)).length;
       return {
         updatedAt: current.toISOString(), timezone, today,
-        completed: { total: count("completed"), today: count("completed", true) },
+        completedResetAt: counter.resetAt,
+        completed: { total: Math.max(0, count("completed") - counter.completedOffset), today: count("completed", true) },
         failed: { total: count("failed"), today: count("failed", true) },
         interrupted: count("interrupted"),
         processing: all.filter((job) => job.status === "processing"),

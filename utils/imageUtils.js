@@ -2,8 +2,8 @@ import path from "node:path";
 import fetch from "node-fetch";
 import sharp from "sharp";
 
-async function fetchBuffer(url) {
-  const response = await fetch(url);
+export async function fetchBuffer(url, signal) {
+  const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`Could not download generated image (${response.status}).`);
   return Buffer.from(await response.arrayBuffer());
 }
@@ -12,7 +12,7 @@ export function resizeForModel(filePath, width = 1024) {
   return sharp(filePath)
     .rotate()
     .resize({ width, withoutEnlargement: true })
-    .jpeg({ quality: 88 })
+    .jpeg({ quality: 85 })
     .toBuffer();
 }
 

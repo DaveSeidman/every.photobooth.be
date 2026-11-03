@@ -1,3 +1,4 @@
+import { logEvent } from "./logger.js";
 import { File } from "node:buffer";
 import path from "node:path";
 import { fal } from "@fal-ai/client";
@@ -35,7 +36,9 @@ export function createFalEditor({
     return sourceUrl;
   };
 
-  const edit = async (imageUrl, prompt) => {
+  const edit = async (imageUrl, prompt, context = {}) => {
+    const started = performance.now();
+    logEvent("model.edit-started", { model, photoId: context.photoId, role: context.role });
     const input = {
       prompt,
       image_urls: Array.isArray(imageUrl) ? imageUrl : [imageUrl],
@@ -52,9 +55,12 @@ export function createFalEditor({
       input,
       logs: false,
       timeout: timeoutMs,
+      abortSignal: context.signal,
+      onQueueUpdate: (update) => logEvent("model.queue", { model, photoId: context.photoId, role: context.role, status: update.status, queuePosition: update.queue_position }),
     });
     const outputUrl = extractFirstImageUrl(result);
     if (!outputUrl) throw new Error("The image model returned no output URL.");
+    logEvent("model.edit-returned", { model, photoId: context.photoId, role: context.role, durationMs: Math.round(performance.now() - started) });
     return outputUrl;
   };
 

@@ -1,0 +1,30 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import sharp from "sharp";
+import { createPrintSheet } from "../utils/printUtils.js";
+import { printMedia } from "../utils/printMedia.js";
+
+test("QW410 perforated sheet contains identical strips at 300 DPI without stretching", async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "every-print-sheet-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const input = path.join(directory, "square.png");
+  await sharp({ create: { width: 600, height: 600, channels: 3, background: "#121212" } }).png().toFile(input);
+  const result = await createPrintSheet(input, directory, "test");
+  const meta = await sharp(result).metadata();
+  assert.equal(meta.width, printMedia.width);
+  assert.equal(meta.height, printMedia.height);
+  assert.equal(meta.density, 300);
+  const left = await sharp(result).extract({ left: 0, top: 0, width: 600, height: 1800 }).raw().toBuffer();
+  const right = await sharp(result).extract({ left: 600, top: 0, width: 600, height: 1800 }).raw().toBuffer();
+  assert.deepEqual(left, right);
+  const pixel = (x, y) => left[(y * 600 + x) * 3];
+  assert.ok(pixel(300, 100) > 250);
+  assert.ok(pixel(300, 599) > 250);
+  assert.ok(pixel(300, 601) < 25);
+  assert.ok(pixel(300, 1198) < 25);
+  assert.ok(pixel(300, 1201) > 250);
+  assert.ok(pixel(300, 1700) > 250);
+});
