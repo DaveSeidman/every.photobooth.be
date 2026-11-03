@@ -168,3 +168,20 @@ test("simultaneous phones cannot take over the tablet during an owned tear", asy
   await new Promise(resolve=>setTimeout(resolve,100));
   assert.ok(received.every(event=>event.clientId==="phone-first-123"),"ownership lasts through the tablet's return animation");
 });
+
+test("relay does not discard a normal motion burst when packets arrive together", async () => {
+  const photoId="takeaway-burst-123";
+  const {socket:kiosk}=await connect("kiosk",photoId);
+  const {socket:phone}=await connect("phone",photoId,"phone-burst-123");
+  const grabbed=waitFor(kiosk,"takeaway:interaction");
+  phone.send(JSON.stringify({type:"takeaway:interaction",action:"grab",gestureId:"burst-gesture-123"}));
+  await grabbed;
+  const received=[];
+  const all=new Promise((resolve,reject)=>{
+    const timeout=setTimeout(()=>reject(new Error('Dropped motion burst')),1500);
+    const listener=raw=>{const m=JSON.parse(raw);if(m.type==='takeaway:interaction'&&m.action==='pull'){received.push(m.x);if(received.length===8){clearTimeout(timeout);kiosk.off('message',listener);resolve();}}};
+    kiosk.on('message',listener);
+  });
+  for(let i=1;i<=8;i++)phone.send(JSON.stringify({type:"takeaway:interaction",action:"pull",gestureId:"burst-gesture-123",x:i/10}));
+  await all;assert.deepEqual(received,[.1,.2,.3,.4,.5,.6,.7,.8]);
+});

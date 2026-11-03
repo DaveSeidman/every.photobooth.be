@@ -156,8 +156,6 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
         const actions = ["grab", "pull", "cancel", "detach", "share-start", "share-complete", "download-started", "share-cancelled", "share-error"];
         if (!actions.includes(message.action)) return;
         const now = Date.now();
-        if (message.action === "pull" && now - (socket.lastTakeawayPull || 0) < 50) return;
-        if (message.action === "pull") socket.lastTakeawayPull = now;
         const gestureId = typeof message.gestureId === "string" && /^[a-zA-Z0-9-]{1,100}$/.test(message.gestureId) ? message.gestureId : "share";
         // Hold one gesture's ownership through its return animation. Other
         // phones continue locally, but cannot redirect this tablet mid-tear.
@@ -178,7 +176,7 @@ export function attachRealtimeServer(server, { allowedOrigins = [] } = {}) {
           method: message.method === "pull" ? "pull" : "tap",
         };
         socket.takeawayGesture = ["grab", "pull"].includes(message.action) ? interaction : null;
-        socket.room.clients.forEach((client) => { if (client.role === "kiosk") send(client, interaction); });
+        socket.room.clients.forEach((client) => { if (client.role === "kiosk" && (message.action !== "pull" || client.bufferedAmount < 1024)) send(client, interaction); });
         return;
       }
 
