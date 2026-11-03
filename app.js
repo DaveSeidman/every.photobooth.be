@@ -56,7 +56,7 @@ export function createApp(overrides = {}) {
         callback(null, true);
         return;
       }
-      callback(new Error("This frontend origin is not allowed."));
+      callback(Object.assign(new Error("This frontend origin is not allowed."), { status: 403 }));
     },
   }));
   app.use(express.json());

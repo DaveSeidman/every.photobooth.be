@@ -39,7 +39,7 @@ The same service also accepts WebSocket connections at `/ws`. Render terminates 
 4. Deploy, then copy the service's final `https://…onrender.com` URL.
 5. In the frontend GitHub repository, create the Actions variable `VITE_API_URL` with that URL and enable GitHub Pages with **GitHub Actions** as the source.
 
-`ALLOWED_ORIGINS` defaults in the Blueprint to `https://daveseidman.github.io`. Add a comma-separated origin if the kiosk later uses a custom domain. Render filesystems are otherwise ephemeral, and persistent disks require a paid service. A disk-backed service runs as a single instance and has brief downtime during deploys.
+`ALLOWED_ORIGINS` in the Blueprint includes `https://photobooth.lightboxlive.io` and `https://daveseidman.github.io`. The canonical custom domain is also included whenever an allowlist is configured, so existing Render services retaining the older GitHub-only environment value work after a code deploy. HTTP CORS and WebSocket handshakes share this resolved list. An unset/empty allowlist keeps the existing open local-development behavior. Render filesystems are otherwise ephemeral, and persistent disks require a paid service. A disk-backed service runs as a single instance and has brief downtime during deploys.
 
 ## API
 

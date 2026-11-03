@@ -26,7 +26,7 @@ services:
       - key: DATA_DIR
         value: /opt/render/project/src/storage
       - key: ALLOWED_ORIGINS
-        value: https://daveseidman.github.io
+        value: https://photobooth.lightboxlive.io,https://daveseidman.github.io
       - key: UPLOAD_MAX_MB
         value: 15
 

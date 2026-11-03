@@ -9,10 +9,14 @@ const numberFromEnv = (name, fallback) => {
 };
 
 const dataDirectory = path.resolve(process.env.DATA_DIR || process.cwd());
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+export function resolveAllowedOrigins(value = "") {
+  const configured = value.split(",").map((origin) => origin.trim()).filter(Boolean);
+  // Existing Render services can retain the old Blueprint's env value.
+  // Keep the canonical booth domain allowed for both HTTP and WebSocket traffic.
+  return configured.length ? [...new Set([...configured, "https://photobooth.lightboxlive.io"])] : [];
+}
+const allowedOrigins = resolveAllowedOrigins(process.env.ALLOWED_ORIGINS);
+
 
 export const config = {
   port: numberFromEnv("PORT", 8000),
