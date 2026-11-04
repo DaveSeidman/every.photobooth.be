@@ -1,3 +1,4 @@
+import { createAnalyticsStore } from "./utils/analytics.js";
 import sharp from "sharp";
 import { createGenerationFallback } from "./utils/generationFallback.js";
 import { createStripPipeline } from "./utils/stripPipeline.js";
@@ -27,6 +28,7 @@ export function createApp(overrides = {}) {
   const app = express();
 
   ensureDirectories([runtimeConfig.directories.uploads, runtimeConfig.directories.photos]);
+  const analytics = createAnalyticsStore(runtimeConfig.directories.photos);
   const generation = createGenerationFallback({ directory: runtimeConfig.directories.photos, settings: runtimeConfig.fallback });
   const activity = createActivityStore(runtimeConfig.directories.photos, { timezone: runtimeConfig.statusTimezone });
   const strips = createStripPipeline({ directory: runtimeConfig.directories.photos, editor, generation, settings: runtimeConfig.print, uploadPrint: overrides.uploadPrint });
@@ -73,6 +75,7 @@ export function createApp(overrides = {}) {
     await strips.refreshPrintStatuses();
     response.set("Cache-Control", "no-store").json({
     ...activity.snapshot(),
+    analytics: analytics.snapshot(),
     status: "ok",
     aiConfigured: Boolean(runtimeConfig.falKey),
     uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
@@ -90,6 +93,13 @@ export function createApp(overrides = {}) {
     const snapshot = activity.resetCompletedTotal();
     logEvent("activity.completed-reset", { previous, total: snapshot.completed.total, resetAt: snapshot.completedResetAt });
     response.set("Cache-Control", "no-store").json(snapshot);
+  });
+  app.post("/api/analytics", express.text({ type: "text/plain", limit: "16kb" }), (request, response) => {
+    let events;
+    try { events = typeof request.body === "string" ? JSON.parse(request.body).events : request.body?.events; }
+    catch { return response.status(400).json({ message: "Invalid analytics events." }); }
+    if (!analytics.record(events)) return response.status(400).json({ message: "Invalid analytics events." });
+    response.status(204).end();
   });
   app.get("/health", (_request, response) => response.json({ status: "ok" }));
   app.get("/config", (_request, response) => response.json({

@@ -174,3 +174,13 @@ test("submit uses a supplied prompt override verbatim", async () => {
 
   assert.equal(receivedPrompt, "Render this custom treatment.");
 });
+
+test("analytics endpoint accepts retry-safe plain-text batches and exposes counts on status", async () => {
+  const body=JSON.stringify({events:[{id:'integration-analytics-001',name:'takeaway_view',site:'takeaway',environment:'test'}]});
+  await request(app).post('/api/analytics').set('Content-Type','text/plain').send(body).expect(204);
+  await request(app).post('/api/analytics').set('Content-Type','text/plain').send(body).expect(204);
+  const status=await request(app).get('/api/status').expect(200);
+  assert.equal(status.body.analytics.counts.test.takeaway_view,1);
+  await request(app).post('/api/analytics').set('Content-Type','text/plain').send('invalid').expect(400);
+  await request(app).post('/api/analytics').send({events:[{name:'pull'}]}).expect(400);
+});

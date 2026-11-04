@@ -15,6 +15,13 @@
     <div class="card"><p>Processing right now</p><strong class="value" id="processing">—</strong><p id="active">Waiting for status</p></div>
     <div class="card"><p>Failed / today</p><strong class="value" id="failed">—</strong><p id="failures">—</p></div>
   </div>
+  <section><h2>Live analytics</h2><p class="note">Event counts since <span id="analytics-since">—</span>. One shared tablet serves many guests; starts and phone visits are more useful than unique browser counts. Local testing is counted separately.</p>
+    <label>Traffic <select id="analytics-environment"><option value="live">Production</option><option value="test">Local / test</option></select></label>
+    <button id="analytics-export" type="button">Download counts CSV</button>
+    <div class="scroll"><table><thead><tr><th>Interaction</th><th>Count</th></tr></thead><tbody id="analytics-counts"></tbody></table></div>
+    <h2 style="margin-top:24px">Latest interactions</h2><div class="scroll"><table><thead><tr><th>Time</th><th>Site</th><th>Event</th><th>Treatment / outcome</th></tr></thead><tbody id="analytics-recent"></tbody></table></div>
+    <p class="note">Phone visits count page opens, including repeat scans. Share complete means the system share sheet completed; Download started does not confirm a saved file. Historical visits before tracking began are unavailable.</p>
+  </section>
   <section><h2>Classic photo strips</h2><p class="note">Original + chosen treatment + a different treatment. Two matching 2×6 strips per sheet.</p><div class="scroll"><table><thead><tr><th>Original photo</th><th>Second treatment</th><th>Status</th><th>Print proof</th></tr></thead><tbody id="strip-jobs"></tbody></table></div></section>
   <section><h2>Service</h2><div class="details"><span class="badge" id="ai">AI: checking…</span><span class="badge" id="uptime">Uptime: —</span><span class="badge" id="interrupted">Interrupted: —</span></div></section>
   <section><h2>Recent activity</h2><div class="scroll"><table><thead><tr><th>Photo ID</th><th>Treatment</th><th>Status</th><th>Started / completed</th></tr></thead><tbody id="jobs"></tbody></table></div><p class="note">Earlier portraits are imported from saved outputs. Historical failures were not tracked before this dashboard.</p></section>
@@ -35,12 +42,30 @@
     }catch(error){set('reset-error',error.message);}
     finally{button.disabled=false;}
   });
+  const eventLabels={booth_view:'Booth page opens',booth_start:'Booth starts',photo_captured:'Photos captured',photo_retake:'Retakes',photo_approved:'Photos approved',generation_start:'Generations requested',generation_complete:'Generations completed',generation_complete_ai:'AI portraits completed',generation_complete_local:'Local fallback portraits completed',generation_error:'Generation requests failed',takeaway_view:'Phone page opens',portrait_loaded:'Phone portraits loaded',share_start:'Save / share taps',share_complete:'Native shares completed',download_started:'Downloads started',share_cancelled:'Shares cancelled',share_error:'Share errors'};
+  let analytics;
+  function renderAnalytics(){
+    if(!analytics)return;
+    const environment=document.getElementById('analytics-environment').value;
+    set('analytics-since',new Date(analytics.since).toLocaleString());
+    const tableRows=(values)=>values.map(values=>{const row=document.createElement('tr');for(const value of values){const cell=document.createElement('td');cell.textContent=value;row.append(cell);}return row;});
+    document.getElementById('analytics-counts').replaceChildren(...tableRows(Object.entries(eventLabels).map(([key,label])=>[label,analytics.counts[environment]?.[key]||0])));
+    document.getElementById('analytics-recent').replaceChildren(...tableRows(analytics.recent.filter(event=>event.environment===environment).slice(0,12).map(event=>[new Date(event.at).toLocaleTimeString(),event.site,eventLabels[event.name]||event.name,[event.style,event.mode,event.durationMs!=null?`${(event.durationMs/1000).toFixed(1)}s`:''].filter(Boolean).join(' · ')||'—'])));
+  }
+  document.getElementById('analytics-environment').addEventListener('change',renderAnalytics);
+  document.getElementById('analytics-export').addEventListener('click',()=>{
+    if(!analytics)return;
+    const environment=document.getElementById('analytics-environment').value;
+    const csv=['event,count,traffic,since',...Object.keys(eventLabels).map(key=>`${key},${analytics.counts[environment]?.[key]||0},${environment},${analytics.since}`)].join('\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));const link=document.createElement('a');link.href=url;link.download=`photobooth-analytics-${environment}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
   async function refresh(){
     try{
       const response=await fetch('/api/status',{cache:'no-store'});
       if(!response.ok)throw new Error('Status unavailable');
       const data=await response.json();
       updateCount(data);
+      analytics=data.analytics;renderAnalytics();
       set('processing',data.processing.length);set('active',data.processing.length?'Generating portraits':'Ready for the next portrait');
       set('failed',data.failed.today);set('failures',`${data.failed.total} failed since tracking began`);
       set('day',`Activity for ${data.today} · ${data.timezone}`);
