@@ -36,8 +36,14 @@ services:
         value: in Brooklyn
       - key: PRINT_PREPARE_STRIPS
         value: "true"
+      # On-site printing is configured in Render; keep tunnel credentials and
+      # the enable switch intact when this Blueprint is synchronized.
       - key: PRINT_AUTO_SUBMIT
-        value: "false"
+        sync: false
+      - key: PRINT_SERVER_URL
+        sync: false
+      - key: PRINT_SERVER_TOKEN
+        sync: false
 
       - key: LOCAL_FALLBACK_ENABLED
         value: "true"
